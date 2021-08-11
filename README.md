@@ -1,1 +1,2 @@
-# GarbageClassifier
+# Quality-/Garbage-/OneClass-Classifier
+
