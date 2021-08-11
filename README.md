@@ -1,1 +1,1 @@
-# one-class-classifier_tensorflow
+# GarbageClassifier

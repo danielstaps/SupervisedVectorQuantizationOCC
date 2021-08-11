@@ -1,5 +1,9 @@
 # Byte-compiled / optimized / DLL files
+lightning_logs
 __pycache__/
+proto/__pycache__/
+proto/datasets/__pycache__/
+proto/functions/__pycache__/
 *.py[cod]
 *$py.class
 
