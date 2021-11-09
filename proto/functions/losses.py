@@ -128,13 +128,20 @@ def one_class_classifier_loss(distances, target_labels, prototype_labels, theta_
     matcher = _get_matcher(target_labels, prototype_labels, device=device)
     not_matcher = torch.bitwise_not(matcher)
 
+    """
+    Heaviside -> RELU oder SIGMOID
+    Funktion umschreiben
+    """
+
     # Optimizing False Positives and Negatives
+    #winning_indices = torch.min(distances, dim=1).indices
+    #diff_to_thresh = torch.subtract(distances[winning_indices], theta_boundary)
     diff_to_thresh = torch.subtract(distances, theta_boundary)
     d_op_in, d_iopf =_get_dop_in_diopf(diff_to_thresh, matcher, not_matcher, device=device)
     minus = torch.tensor(-1).type(torch.float).to(device)
     muf = d_op_in * torch.pow(minus, not_matcher.type(torch.long))
     muf = torch.sum(muf, dim=-1, keepdims=True)
-    
+
     # Minimizing distances to True Positives (similar to penalty term)
     d_matching_zero = torch.where(matcher, distances, zero)
     d_matching_inf = torch.where(matcher, distances, inf)
@@ -148,9 +155,42 @@ def one_class_classifier_loss(distances, target_labels, prototype_labels, theta_
     alpha = torch.tensor(0.5).type(torch.float).to(device)
     opalpha = torch.tensor(1 - alpha).type(torch.float).to(device)
 
-    mu = alpha * mud + opalpha * muf
+    #mu = alpha * mud + opalpha * muf
+    mu = muf
 
     return mu.mean()
+
+
+def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, device='cpu'):
+    """ OneClassClassifier loss function """
+    if torch.cuda.is_available():
+        device = 'cuda:0'
+    else:
+        device = 'cpu'
+    zero = torch.tensor(0).type(torch.float).to(device)
+    inf = torch.tensor(float('inf')).type(torch.float).to(device)
+    matcher = _get_matcher(target_labels, prototype_labels, device=device)
+    not_matcher = torch.bitwise_not(matcher)
+
+    # Optimizing False Positives and Negatives
+    winning_indices = torch.min(distances, dim=1).indices # Liste an Winning protos
+    d_tilde = torch.subtract(distances[:,winning_indices], theta_boundary)
+    d_tilde = d_tilde[:,0]
+    # d_tilde = torch.subtract(distances, theta_boundary)
+    minus = torch.tensor(-1).type(torch.float).to(device)
+    #muf = d_tilde * torch.pow(minus, not_matcher.type(torch.long))
+    muf = d_tilde * ((-1) ** not_matcher.type(torch.long))
+    # RELU
+    muf = torch.relu(muf)
+    #d_op_in, _ =_get_dop_in_diopf(d_tilde, matcher, not_matcher, device=device)
+    # SIGMOID
+    #muf = torch.sigmoid(muf)
+    #print(muf, muf.shape)
+    print(muf)
+    muf = torch.sum(muf, dim=-1, keepdims=True)
+    print(muf)
+
+    return muf.mean()
 
 
 def occ_loss(distances, target_labels, prototype_labels, theta_boundary):

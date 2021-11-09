@@ -16,14 +16,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Dataset
-    train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
-    #train_ds = Flag(num_samples=500, dimensions=2, num_classes=3, blobs_per_class=2)
+    #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
+    train_ds = Flag(num_samples=1000, dimensions=2, num_classes=3, blobs_per_class=2)
 
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=256)
 
     # Hyperparameters
-    num_classes = 2
+    num_classes = 4
     prototypes_per_class = 10
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             #pruning,
         ],
         terminate_on_nan=True,
-        gpus='0'
+        #gpus='0'
     )
 
     # Training loop

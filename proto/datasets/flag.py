@@ -8,9 +8,11 @@ def make_flag(num_samples=300, dimensions=2, num_classes=1, blobs_per_class=1, e
     """ Generates a variation of the PalauFlag """
     x = np.random.uniform(low=0.0, high=1.0, size=(num_samples, dimensions))
     y = np.full(num_samples, num_classes, dtype=int)
-    
+   
+    test = 1
+
     blob_mean = np.random.uniform(low=0.1, high=0.9, size=(num_classes*blobs_per_class, dimensions))
-    blob_bord = np.random.uniform(low=0.05*dimensions, high=0.15*dimensions, size=(num_classes*blobs_per_class, dimensions))
+    blob_bord = np.random.uniform(low=0.05*dimensions*test, high=0.15*dimensions*test, size=(num_classes*blobs_per_class, dimensions))
 
     for target in range(num_classes):
         for blob in range(blobs_per_class):

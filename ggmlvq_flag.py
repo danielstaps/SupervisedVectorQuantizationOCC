@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 2
+    num_classes = 1
     blobs_per_class = 2
 
     # Dataset
@@ -76,7 +76,7 @@ if __name__ == "__main__":
             #pruning,
         ],
         terminate_on_nan=True,
-        gpus='0'
+        #gpus='0'
     )
 
     # Training loop
