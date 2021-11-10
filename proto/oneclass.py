@@ -5,7 +5,7 @@ from torch.nn.parameter import Parameter
 
 from prototorch.models.glvq import GLVQ, SiameseGLVQ, GMLVQ
 from .functions.competitions import wtac_thresh
-from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny
+from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny, occ_studentT_loss
 from prototorch.nn import LambdaLayer
 
 from prototorch.core.distances import (
@@ -39,15 +39,15 @@ class OneClassMixin():
         #self.loss = LambdaLayer(one_class_classifier_loss)
         self.loss = LambdaLayer(occ_mitRonny)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
-    """
+
     def init_variant_2(self,):
         print(self.proto_layer.labels.shape)
-        theta = torch.full((self.proto_layer.labels.shape, 2), 0.2, device=self.device)
+        theta = torch.full(self.proto_layer.labels.shape, 0.2, device=self.device)
         theta = torch.pow(theta, 2)
         self.register_parameter("_theta", Parameter(theta))
-        self.loss = LambdaLayer(one_class_classifier_loss)
+        self.loss = LambdaLayer(occ_studentT_loss)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
-    """
+   
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
         out = self.compute_distances(x)
@@ -69,12 +69,12 @@ class OneClassMixin():
         return y_pred
 
 
-#class OneClassGLVQv2(OneClassMixin, GLVQ):
-#    def __init__(self, hparams, **kwargs):
-#        distance_fn = kwargs.pop("distance_fn", squared_euclidean_distance)
-#        super().__init__(hparams, distance_fn=distance_fn, **kwargs)
-#        #super().__init__(hparams, **kwargs)
-#        self.init_variant_2()
+class OneClassGLVQv2(OneClassMixin, GLVQ):
+    def __init__(self, hparams, **kwargs):
+        distance_fn = kwargs.pop("distance_fn", squared_euclidean_distance)
+        super().__init__(hparams, distance_fn=distance_fn, **kwargs)
+        #super().__init__(hparams, **kwargs)
+        self.init_variant_2()
 
 
 class OneClassGLVQ(OneClassMixin, GLVQ):

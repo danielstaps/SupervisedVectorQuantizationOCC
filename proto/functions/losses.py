@@ -193,6 +193,65 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
     return muf.mean()
 
 
+
+""" implementation of student-t distribution """
+def studentT(distances, theta_boundary):
+    torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
+
+    print(theta_boundary)
+    prefactor = 1 / (torch.pi * theta_boundary)
+    print(prefactor)
+
+    winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
+    distribution = 1 / (1 + (distances[:,winning_indices] / (theta_boundary ** 2)))
+    print(distribution)
+
+    studentT = prefactor * distribution
+
+    return studentT
+
+
+def error_type_determination(distances, theta_boundary, target_labels, prototype_labels):
+    matcher = _get_matcher(target_labels, prototype_labels)
+    not_matcher = torch.bitwise_not(matcher)
+
+    # condition calc
+    winning_indices = torch.min(distances, dim=1).indices # list of winning protos
+    d_tilde = torch.subtract(distances[:,winning_indices], theta_boundary)
+
+    # filter FP, FN
+    fF = d_tilde * ((-1) ** not_matcher.type(torch.long))
+    fF = torch.relu(fF)
+
+    return fF
+
+
+def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary, device='cpu'):
+    """
+    OneClassClassifier loss function implemented with Student-t distribution
+    """
+
+    if torch.cuda.is_available():
+        device = 'cuda:0'
+    else:
+        device = 'cpu'
+
+    # get probabilty from distribution
+    prob = studentT(distances, theta_boundary)
+    #print("\nprobability sT:",prob)
+
+    # filter FP, FN
+    fF = error_type_determination(distances, theta_boundary, target_labels, prototype_labels) 
+    #print("\nerrortypedeter:",fF)
+
+    # calc loss
+    loss = (fF * prob).mean()
+    #print("\nloss",loss)
+
+    return loss
+    
+
+
 def occ_loss(distances, target_labels, prototype_labels, theta_boundary):
     """ OneClassClassifier loss function """
     zero = torch.tensor(0).type(torch.float)

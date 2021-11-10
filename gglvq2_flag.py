@@ -25,8 +25,8 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 2
-    blobs_per_class = 2
+    num_classes = 1
+    blobs_per_class = 1
 
     # Dataset
     train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
@@ -34,7 +34,9 @@ if __name__ == "__main__":
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
                                                num_workers=0,
-                                               batch_size=train_ds.data.shape[0])
+                                               #batch_size=train_ds.data.shape[0]
+                                               batch_size=10,
+                                               )
         
     # Hyperparameters
     prototypes_per_class = blobs_per_class
