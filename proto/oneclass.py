@@ -28,26 +28,17 @@ class ThetaInitializerPerPrototype():
 
 
 class OneClassMixin():
-    def init_variant_1(self,):
+    def init_variant(self,):
         # Additional parameters
         #theta = ThetaInitializerPerPrototype(num_thetas=self.proto_layer.labels.shape, theta=10.).generate()
         #theta = torch.randn(self.proto_layer.labels.shape,
         #                    device=self.device)
-        theta = torch.full(self.proto_layer.labels.shape, 0.00001, device=self.device)
+        theta = torch.full(self.proto_layer.labels.shape, 0.2, device=self.device)
         theta = torch.pow(theta, 2)
         self.register_parameter("_theta", Parameter(theta))
         #self.loss = LambdaLayer(one_class_classifier_loss)
         self.loss = LambdaLayer(occ_mitRonny)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
-
-    def init_variant_2(self,):
-        print(self.proto_layer.labels.shape)
-        theta = torch.full(self.proto_layer.labels.shape, 0.2, device=self.device)
-        theta = torch.pow(theta, 2)
-        self.register_parameter("_theta", Parameter(theta))
-        self.loss = LambdaLayer(occ_studentT_loss)
-        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
-   
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
         out = self.compute_distances(x)
@@ -69,6 +60,7 @@ class OneClassMixin():
         return y_pred
 
 
+
 class OneClassGLVQv2(OneClassMixin, GLVQ):
     def __init__(self, hparams, **kwargs):
         distance_fn = kwargs.pop("distance_fn", squared_euclidean_distance)
@@ -76,13 +68,21 @@ class OneClassGLVQv2(OneClassMixin, GLVQ):
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
 
+    def init_variant_2(self,):
+        print(self.proto_layer.labels.shape)
+        otheta = torch.full(self.proto_layer.labels.shape, 0.001, device=self.device)
+        theta = torch.abs(otheta)
+        self.register_parameter("_theta", Parameter(theta))
+        self.loss = LambdaLayer(occ_studentT_loss)
+        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
+
 
 class OneClassGLVQ(OneClassMixin, GLVQ):
     def __init__(self, hparams, **kwargs):
         distance_fn = kwargs.pop("distance_fn", squared_euclidean_distance)
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
-        self.init_variant_1()
+        self.init_variant()
 
 
 
@@ -91,7 +91,7 @@ class OneClassGMLVQ(OneClassMixin, GMLVQ):
         distance_fn = kwargs.pop("distance_fn", omega_distance)
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
-        self.init_variant_1()
+        self.init_variant()
 
     def lambda_matrix(self):
         lam = self._omega @ self._omega.T

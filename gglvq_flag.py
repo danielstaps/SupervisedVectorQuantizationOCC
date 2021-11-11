@@ -39,12 +39,12 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = blobs_per_class
+    prototypes_per_class = 3
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
         transfer_function="sigmoid_beta",
         transfer_beta=10.0,
-        lr=0.03,
+        lr=0.01,
     )
 
     # Initialize the model

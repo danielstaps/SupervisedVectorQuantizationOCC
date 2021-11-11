@@ -29,28 +29,31 @@ if __name__ == "__main__":
     blobs_per_class = 1
 
     # Dataset
+    #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
     train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
     
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
                                                num_workers=0,
-                                               #batch_size=train_ds.data.shape[0]
-                                               batch_size=10,
+                                               #batch_size=train_ds.data.shape[0],
+                                               batch_size=num_samples,
                                                )
         
     # Hyperparameters
-    prototypes_per_class = blobs_per_class
+    prototypes_per_class = 2
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
-        transfer_function="sigmoid_beta",
-        transfer_beta=10.0,
-        lr=0.01,
+        #transfer_function="sigmoid_beta",
+        #transfer_beta=10.0,
+        #lr=0.1,
     )
 
     # Initialize the model
     model = OneClassGLVQv2(hparams,
                            optimizer=torch.optim.Adam,
-                           prototypes_initializer=pt.core.SMCI(train_ds))
+                           #prototypes_initializer=pt.core.SMCI(train_ds),
+                           prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
+                           )
 
     # Callbacks
     vis = pt.models.VisGLVQ2D(

@@ -167,6 +167,9 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
         device = 'cuda:0'
     else:
         device = 'cpu'
+
+    print("theta",theta_boundary)
+
     zero = torch.tensor(0).type(torch.float).to(device)
     inf = torch.tensor(float('inf')).type(torch.float).to(device)
     matcher = _get_matcher(target_labels, prototype_labels, device=device)
@@ -174,8 +177,17 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
 
     # Optimizing False Positives and Negatives
     winning_indices = torch.min(distances, dim=1).indices # Liste an Winning protos
-    d_tilde = torch.subtract(distances[:,winning_indices], theta_boundary)
-    d_tilde = d_tilde[:,0]
+    """
+    winning_indices = torch.expand_dims(winning_indices, axis=0)
+    print(winning_indices.shape)
+    d_tilde = torch.subtract(distances, theta_boundary)
+    print(d_tilde.shape)
+    d_tilde = d_tilde[:,winning_indices]
+    """
+    d_tilde = torch.subtract(distances, theta_boundary)
+    d_tilde = d_tilde.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    not_matcher = not_matcher.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    #print(d_tilde)
     # d_tilde = torch.subtract(distances, theta_boundary)
     minus = torch.tensor(-1).type(torch.float).to(device)
     #muf = d_tilde * torch.pow(minus, not_matcher.type(torch.long))
@@ -186,11 +198,23 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
     # SIGMOID
     #muf = torch.sigmoid(muf)
     #print(muf, muf.shape)
-    print(muf)
-    muf = torch.sum(muf, dim=-1, keepdims=True)
-    print(muf)
+    #print(muf)
+    #muf = torch.sum(muf, dim=-1, keepdims=True)
+    #print(muf)
 
-    return muf.mean()
+    # Minimizing distances to True Positives (similar to penalty term)
+    d_matching_zero = torch.where(matcher, distances, zero)
+    d_matching_inf = torch.where(matcher, distances, inf)
+    # when having multiple classes some distances > 0 get 0 bc of protos with false label
+    # we check this with the sum of distances for all protos
+    dsums = torch.sum(d_matching_zero, dim=-1, keepdims=True)
+    dzmins = torch.min(d_matching_zero, dim=-1, keepdims=True).values
+    dimins = torch.min(d_matching_inf, dim=-1, keepdims=True).values
+    mud = torch.where(dsums != 0., dimins, dzmins)
+
+    mu = mud + muf
+
+    return mu.mean()
 
 
 
@@ -198,15 +222,17 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
 def studentT(distances, theta_boundary):
     torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
-    print(theta_boundary)
+    #print("theta",theta_boundary, theta_boundary.shape)
     prefactor = 1 / (torch.pi * theta_boundary)
-    print(prefactor)
+    #print("prefa",prefactor, prefactor.shape)
 
     winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
-    distribution = 1 / (1 + (distances[:,winning_indices] / (theta_boundary ** 2)))
-    print(distribution)
+    #print("distances",distances)
+    distribution = 1 / (1 + (distances / (theta_boundary ** 2)))
 
     studentT = prefactor * distribution
+    #studentT = distribution
+    studentT = studentT.gather(1, winning_indices.unsqueeze(1)).squeeze()
 
     return studentT
 
@@ -215,13 +241,21 @@ def error_type_determination(distances, theta_boundary, target_labels, prototype
     matcher = _get_matcher(target_labels, prototype_labels)
     not_matcher = torch.bitwise_not(matcher)
 
-    # condition calc
-    winning_indices = torch.min(distances, dim=1).indices # list of winning protos
-    d_tilde = torch.subtract(distances[:,winning_indices], theta_boundary)
+    winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
+    d_tilde = torch.subtract(distances, theta_boundary)
 
-    # filter FP, FN
-    fF = d_tilde * ((-1) ** not_matcher.type(torch.long))
-    fF = torch.relu(fF)
+    #print("d_tilde",d_tilde[:10])
+    #print("matcher",matcher[:10])
+
+    is_in_bound = d_tilde < 0
+    is_out_of_bound = d_tilde >= 0
+    case1 = torch.where(torch.logical_and(is_out_of_bound, matcher.squeeze()), -1, 0)
+    case2 = torch.logical_and(is_in_bound, not_matcher.squeeze())
+    #print(case1 == case2)
+    
+    fF = torch.add(case1, case2)
+    fF = fF.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    #print("fF",fF)
 
     return fF
 
@@ -246,7 +280,7 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
 
     # calc loss
     loss = (fF * prob).mean()
-    #print("\nloss",loss)
+    #print("loss",loss)
 
     return loss
     
