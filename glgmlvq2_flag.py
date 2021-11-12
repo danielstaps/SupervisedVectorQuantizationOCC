@@ -9,7 +9,7 @@ import numpy as np
 import prototorch as pt
 
 from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGLVQv2
+from proto.oneclass import OneClassGMLVQv2
 
 
 CUDA = False
@@ -25,12 +25,12 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 2
-    blobs_per_class = 2
+    num_classes = 1
+    blobs_per_class = 1
 
     # Dataset
-    #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
-    train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
+    train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
+    #train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
     
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
@@ -40,19 +40,23 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = 2
+    prototypes_per_class = 25
     hparams = dict(
+        input_dim=dimensions,
+        latent_dim=2,
         distribution=(num_classes, prototypes_per_class),
         #transfer_function="sigmoid_beta",
         #transfer_beta=10.0,
         #lr=0.1,
+        proto_lr=0.005,
+        bb_lr=0.001,
     )
 
     # Initialize the model
-    model = OneClassGLVQv2(hparams,
+    model = OneClassGMLVQv2(hparams,
                            optimizer=torch.optim.Adam,
                            #prototypes_initializer=pt.core.SMCI(train_ds),
-                           prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2),
+                           prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
                            )
 
     # Callbacks
