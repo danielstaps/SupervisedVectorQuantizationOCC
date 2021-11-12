@@ -115,10 +115,20 @@ class OneClassGMLVQv2(OneClassMixin, GMLVQ):
 
 
 
-class OneClassGMLVQv2(OneClassMixin, LGMLVQ):
+class OneClassLGMLVQv2(OneClassMixin, LGMLVQ):
     def __init__(self, hparams, **kwargs):
-        distance_fn = kwargs.pop("distance_fn", omega_distance)
+        distance_fn = kwargs.pop("distance_fn", lomega_distance)
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
+ 
+        # Re-register `_omega` to override the one from the super class.
+        omega = torch.randn(
+            self.num_prototypes,
+            self.hparams.input_dim,
+            self.hparams.latent_dim,
+            device=self.device,
+        )
+        self.register_parameter("_omega", Parameter(omega))
+
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
 

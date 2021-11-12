@@ -25,8 +25,8 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 2
-    blobs_per_class = 2
+    num_classes = 1
+    blobs_per_class = 1
 
     # Dataset
     #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
