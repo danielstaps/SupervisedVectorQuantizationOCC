@@ -163,9 +163,12 @@ def one_class_classifier_loss(distances, target_labels, prototype_labels, theta_
 
 def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, device='cpu'):
     """ OneClassClassifier loss function """
+    if torch.cuda.is_available():
+        device = 'cuda:0'
+    else:
+        device = 'cpu'
 
     print("theta",theta_boundary)
-    print(device)
 
     zero = torch.tensor(0).type(torch.float).to(device)
     inf = torch.tensor(float('inf')).type(torch.float).to(device)

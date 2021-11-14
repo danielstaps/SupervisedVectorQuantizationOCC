@@ -43,7 +43,7 @@ class OneClassMixin():
         x, y = batch
         out = self.compute_distances(x)
         plabels = self.proto_layer.labels
-        loss = self.loss(out, y, prototype_labels=plabels, theta_boundary=self._theta)
+        loss = self.loss(out, y, prototype_labels=plabels, theta_boundary=self._theta, device=self.device)
         #mu = self.loss(out, y, prototype_labels=plabels, theta_boundary=self._theta)
         #batch_loss = self.transfer_layer(mu, beta=self.hparams.transfer_beta)
         #loss = batch_loss.sum(dim=0)

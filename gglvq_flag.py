@@ -12,8 +12,12 @@ from proto.datasets.flag import Flag
 from proto.oneclass import OneClassGLVQ, OneClassGMLVQ
 
 
-CUDA = False
+if torch.cuda.is_available():
+    CUDA = True
+else:
+    CUDA = False
 
+CUDA = False
 
 if __name__ == "__main__":
     # Command-line arguments
@@ -87,6 +91,7 @@ if __name__ == "__main__":
                 # pruning,
             ],
             terminate_on_nan=True,
+            accelerator='cpu',
         )
     # Training loop
     trainer.fit(model, train_loader)
