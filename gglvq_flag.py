@@ -43,7 +43,7 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = 3
+    prototypes_per_class = 1
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
         transfer_function="sigmoid_beta",
@@ -91,7 +91,6 @@ if __name__ == "__main__":
                 # pruning,
             ],
             terminate_on_nan=True,
-            accelerator='cpu',
         )
     # Training loop
     trainer.fit(model, train_loader)

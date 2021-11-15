@@ -24,7 +24,7 @@ if __name__ == "__main__":
     num_samples = 1000
     dimensions = 2
     num_classes = 1
-    blobs_per_class = 2
+    blobs_per_class = 1
 
     # Dataset
     train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)

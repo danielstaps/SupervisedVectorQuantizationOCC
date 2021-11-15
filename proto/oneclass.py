@@ -38,7 +38,8 @@ class OneClassMixin():
         self.register_parameter("_theta", Parameter(theta))
         #self.loss = LambdaLayer(one_class_classifier_loss)
         self.loss = LambdaLayer(occ_mitRonny)
-        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
+        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert
+
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
         out = self.compute_distances(x)
@@ -87,7 +88,7 @@ class OneClassGMLVQv2(OneClassMixin, GMLVQ):
 
     def init_variant_2(self,):
         print(self.proto_layer.labels.shape)
-        otheta = torch.full(self.proto_layer.labels.shape, 0.001, device=self.device)
+        otheta = torch.full(self.proto_layer.labels.shape, 0.1, device=self.device)
         theta = torch.abs(otheta)
         self.register_parameter("_theta", Parameter(theta))
         self.loss = LambdaLayer(occ_studentT_loss)
@@ -134,16 +135,17 @@ class OneClassLGMLVQv2(OneClassMixin, LGMLVQ):
 
     def init_variant_2(self,):
         print(self.proto_layer.labels.shape)
-        otheta = torch.full(self.proto_layer.labels.shape, 0.001, device=self.device)
+        otheta = torch.full(self.proto_layer.labels.shape, 0.03, device=self.device)
         theta = torch.abs(otheta)
         self.register_parameter("_theta", Parameter(theta))
         self.loss = LambdaLayer(occ_studentT_loss)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
+    """
     def lambda_matrix(self):
         lam = self._omega @ self._omega.T
         return lam.detach().cpu()
-
+    """
     def predict_latent(self, x, map_protos=True):
         """Predict `x` assuming it is already embedded in the latent space.
 
@@ -182,6 +184,46 @@ class OneClassGMLVQ(OneClassMixin, GMLVQ):
         lam = self._omega @ self._omega.T
         return lam.detach().cpu()
 
+    def predict_latent(self, x, map_protos=True):
+        """Predict `x` assuming it is already embedded in the latent space.
+
+        Only the prototypes are embedded in the latent space using the
+        backbone.
+
+        """
+        self.eval()
+        with torch.no_grad():
+            protos, plabels = self.proto_layer()
+            if map_protos:
+                protos = self.backbone(protos)
+            d = squared_euclidean_distance(x, protos)
+            y_pred = self.wtac(d, plabels, self._theta)
+        return y_pred
+
+
+
+class OneClassLGMLVQ(OneClassMixin, LGMLVQ):
+    def __init__(self, hparams, **kwargs):
+        distance_fn = kwargs.pop("distance_fn", lomega_distance)
+        super().__init__(hparams, distance_fn=distance_fn, **kwargs)
+ 
+        # Re-register `_omega` to override the one from the super class.
+        omega = torch.randn(
+            self.num_prototypes,
+            self.hparams.input_dim,
+            self.hparams.latent_dim,
+            device=self.device,
+        )
+        self.register_parameter("_omega", Parameter(omega))
+
+        #super().__init__(hparams, **kwargs)
+        self.init_variant()
+
+    """
+    def lambda_matrix(self):
+        lam = self._omega @ self._omega.T
+        return lam.detach().cpu()
+    """
     def predict_latent(self, x, map_protos=True):
         """Predict `x` assuming it is already embedded in the latent space.
 

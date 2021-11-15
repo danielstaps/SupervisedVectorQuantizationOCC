@@ -57,7 +57,10 @@ if __name__ == "__main__":
                            optimizer=torch.optim.Adam,
                            #prototypes_initializer=pt.core.SMCI(train_ds),
                            prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
+                           omega_initializer=pt.core.PCALTI(train_ds.data)
                            )
+
+    print(model)
 
     # Callbacks
     vis = pt.models.VisGLVQ2D(

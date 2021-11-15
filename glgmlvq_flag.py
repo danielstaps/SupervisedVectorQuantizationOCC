@@ -9,7 +9,7 @@ import numpy as np
 import prototorch as pt
 
 from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGMLVQv2
+from proto.oneclass import OneClassLGMLVQ
 
 
 CUDA = False
@@ -25,9 +25,8 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 1
+    num_classes = 2
     blobs_per_class = 1
-    latent_dim = 2
 
     # Dataset
     #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
@@ -44,7 +43,7 @@ if __name__ == "__main__":
     prototypes_per_class = 1
     hparams = dict(
         input_dim=dimensions,
-        latent_dim=latent_dim,
+        latent_dim=2,
         distribution=(num_classes, prototypes_per_class),
         #transfer_function="sigmoid_beta",
         #transfer_beta=10.0,
@@ -54,12 +53,14 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassGMLVQv2(hparams,
+    model = OneClassLGMLVQ(hparams,
                            optimizer=torch.optim.Adam,
                            #prototypes_initializer=pt.core.SMCI(train_ds),
                            prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
-                           #omega_initializer=pt.core.PCALTI(train_ds.data),
+                           omega_initializer=pt.core.PCALTI(train_ds.data)
                            )
+
+    print(model)
 
     # Callbacks
     vis = pt.models.VisGLVQ2D(
