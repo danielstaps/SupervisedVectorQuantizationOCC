@@ -37,7 +37,7 @@ if __name__ == "__main__":
         
    
     # Hyperparameters
-    prototypes_per_class = blobs_per_class
+    prototypes_per_class = 1
     hparams = dict(
         input_dim=dimensions,
         latent_dim=2,

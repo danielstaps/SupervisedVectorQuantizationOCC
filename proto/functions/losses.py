@@ -246,8 +246,9 @@ def error_type_determination(distances, theta_boundary, target_labels, prototype
 
     is_in_bound = d_tilde < 0
     is_out_of_bound = d_tilde >= 0
-    case1 = torch.logical_and(is_out_of_bound, matcher.squeeze())
-    case2 = torch.logical_and(is_in_bound, not_matcher.squeeze())
+    case1 = torch.logical_and(is_out_of_bound, matcher)
+    #case1 = torch.where(torch.logical_and(is_out_of_bound, matcher.squeeze()), -1, 0)
+    case2 = torch.logical_and(is_in_bound, not_matcher)
     #print(case1 == case2)
     
     #fF = torch.add(case1, case2)
@@ -278,9 +279,18 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
     #print("\nerrortypedeter:",fF)
 
     # calc loss
-    FPloss = FP * prob
+    #FPloss = torch.masked_select(prob, FP)
+    #FNloss = 1 - torch.masked_select(prob, FN)
+    #FPloss = torch.where(FP, prob.float(), 0.)
+    #FNloss = 1. - torch.where(FN, prob.float(), 0.)
+    FPloss = (FP * prob)
     FNloss = 1 - (FN * prob)
+    #print(FPloss.mean(), FNloss.mean())
+    #print(torch.cat([FPloss, FNloss]))
+
     loss = (FPloss + FNloss).mean()
+    #loss = torch.cat([FPloss, FNloss]).mean()
+    #loss = (fF * prob).mean()
     #print("loss",loss)
 
     return loss
