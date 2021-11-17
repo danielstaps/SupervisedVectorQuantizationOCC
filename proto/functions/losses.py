@@ -249,15 +249,17 @@ def error_type_determination(distances, theta_boundary, target_labels, prototype
 
     is_in_bound = d_tilde < 0
     is_out_of_bound = d_tilde >= 0
-    case1 = torch.where(torch.logical_and(is_out_of_bound, matcher.squeeze()), -1, 0)
+    case1 = torch.logical_and(is_out_of_bound, matcher.squeeze())
     case2 = torch.logical_and(is_in_bound, not_matcher.squeeze())
     #print(case1 == case2)
     
-    fF = torch.add(case1, case2)
-    fF = fF.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    #fF = torch.add(case1, case2)
+    #fF = fF.gather(1, winning_indices.unsqueeze(1)).squeeze()
     #print("fF",fF)
+    FN = case1.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    FP = case2.gather(1, winning_indices.unsqueeze(1)).squeeze()
 
-    return fF
+    return FN, FP
 
 
 def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary, device='cpu'):
@@ -275,11 +277,13 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
     #print("\nprobability sT:",prob)
 
     # filter FP, FN
-    fF = error_type_determination(distances, theta_boundary, target_labels, prototype_labels) 
+    FN, FP = error_type_determination(distances, theta_boundary, target_labels, prototype_labels) 
     #print("\nerrortypedeter:",fF)
 
     # calc loss
-    loss = (fF * prob).mean()
+    FPloss = FP * prob
+    FNloss = 1 - (FN * prob)
+    loss = (FPloss + FNloss).mean()
     #print("loss",loss)
 
     return loss
