@@ -12,8 +12,12 @@ from proto.datasets.flag import Flag
 from proto.oneclass import OneClassGLVQ, OneClassGMLVQ
 
 
-CUDA = False
+if torch.cuda.is_available():
+    CUDA = True
+else:
+    CUDA = False
 
+CUDA = False
 
 if __name__ == "__main__":
     # Command-line arguments
@@ -39,7 +43,7 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = 3
+    prototypes_per_class = 1
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
         transfer_function="sigmoid_beta",

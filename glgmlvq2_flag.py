@@ -9,8 +9,10 @@ import numpy as np
 import prototorch as pt
 
 from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGLVQ, OneClassGMLVQ
+from proto.oneclass import OneClassLGMLVQv2
 
+
+CUDA = False
 
 
 if __name__ == "__main__":
@@ -27,33 +29,39 @@ if __name__ == "__main__":
     blobs_per_class = 1
 
     # Dataset
+    #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
     train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
     
-
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
                                                num_workers=0,
-                                               batch_size=train_ds.data.shape[0])
+                                               #batch_size=train_ds.data.shape[0],
+                                               batch_size=num_samples,
+                                               )
         
-   
     # Hyperparameters
-    prototypes_per_class = blobs_per_class
+    prototypes_per_class = 1
     hparams = dict(
         input_dim=dimensions,
         latent_dim=2,
         distribution=(num_classes, prototypes_per_class),
-        transfer_function="sigmoid_beta",
-        transfer_beta=10.0,
+        #transfer_function="sigmoid_beta",
+        #transfer_beta=10.0,
+        #lr=0.1,
         proto_lr=0.005,
-        bb_lr=0.001
+        bb_lr=0.001,
     )
-    
+
     # Initialize the model
-    model = OneClassGMLVQ(hparams,
-                          optimizer=torch.optim.Adam,
-                          prototypes_initializer=pt.core.SMCI(train_ds),
-                          omega_initializer=pt.core.PCALTI(train_ds.data))
-    
+    model = OneClassLGMLVQv2(hparams,
+                           optimizer=torch.optim.Adam,
+                           #prototypes_initializer=pt.core.SMCI(train_ds),
+                           prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
+                           omega_initializer=pt.core.PCALTI(train_ds.data)
+                           )
+
+    print(model)
+
     # Callbacks
     vis = pt.models.VisGLVQ2D(
         train_ds, 
@@ -69,15 +77,24 @@ if __name__ == "__main__":
     )   
     
     # Setup trainer
-    trainer = pl.Trainer.from_argparse_args(
-        args,
-        callbacks=[
-            vis,
-            #pruning,
-        ],
-        terminate_on_nan=True,
-        #gpus='0'
-    )
-
+    if CUDA:
+        trainer = pl.Trainer.from_argparse_args(
+            args,
+            callbacks=[
+                vis,
+                # pruning,
+            ],
+            terminate_on_nan=True,
+            gpus='0'
+        )
+    else:
+        trainer = pl.Trainer.from_argparse_args(
+            args,
+            callbacks=[
+                vis,
+                # pruning,
+            ],
+            terminate_on_nan=True,
+        )
     # Training loop
     trainer.fit(model, train_loader)
