@@ -7,7 +7,7 @@ def _get_matcher(targets, labels, device='cpu'):
     """Returns a boolean tensor."""
     #matcher = torch.eq(targets.unsqueeze(dim=1), labels)
     targets_resized = targets.unsqueeze(dim=1)
-    matcher = torch.eq(targets_resized, labels.to(device))
+    matcher = torch.eq(targets_resized.to(device), labels.to(device))
     if labels.ndim == 2:
         # if the labels are one-hot vectors
         num_classes = targets.size()[1]
@@ -234,8 +234,8 @@ def studentT(distances, theta_boundary):
     return studentT
 
 
-def error_type_determination(distances, theta_boundary, target_labels, prototype_labels):
-    matcher = _get_matcher(target_labels, prototype_labels)
+def error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device):
+    matcher = _get_matcher(target_labels, prototype_labels, device=device)
     not_matcher = torch.bitwise_not(matcher)
 
     winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
@@ -275,7 +275,7 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
     #print("\nprobability sT:",prob)
 
     # filter FP, FN
-    FN, FP = error_type_determination(distances, theta_boundary, target_labels, prototype_labels) 
+    FN, FP = error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device) 
     #print("\nerrortypedeter:",fF)
 
     # calc loss
@@ -296,6 +296,30 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
 
     return loss
     
+def occ_studentT_loss_v2(distances, target_labels, prototype_labels, theta_boundary, device='cpu'):
+    """
+    OneClassClassifier loss function implemented with Student-t distribution
+    """
+   
+    # get probabilty from distribution
+    prob = studentT(distances, theta_boundary)
+    #print("\nprobability sT:",prob)
+
+    # filter FP, FN
+    FN, FP = error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device) 
+    P = _get_matcher(target_labels, prototype_labels, device=device)
+    N = torch.bitwise_not(P)
+
+    winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
+    P = P.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    N = N.gather(1, winning_indices.unsqueeze(1)).squeeze()
+
+    FPloss = (FP * prob)
+    Ploss = 1 - (P * prob)
+
+    loss = (FPloss + Ploss).mean()
+
+    return loss
 
 
 def occ_loss(distances, target_labels, prototype_labels, theta_boundary):

@@ -5,7 +5,7 @@ from torch.nn.parameter import Parameter
 
 from prototorch.models.glvq import GLVQ, SiameseGLVQ, GMLVQ, LGMLVQ
 from .functions.competitions import wtac_thresh
-from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny, occ_studentT_loss
+from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny, occ_studentT_loss, occ_studentT_loss_v2
 from prototorch.nn import LambdaLayer
 
 from prototorch.core.distances import (

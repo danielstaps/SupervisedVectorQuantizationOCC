@@ -12,7 +12,7 @@ from proto.datasets.flag import Flag
 from proto.oneclass import OneClassGMLVQv2
 
 
-CUDA = False
+CUDA = True
 
 
 if __name__ == "__main__":
@@ -30,8 +30,8 @@ if __name__ == "__main__":
     latent_dim = 2
 
     # Dataset
-    #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
-    train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
+    train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
+    #train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
     
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = 1
+    prototypes_per_class = 15
     hparams = dict(
         input_dim=dimensions,
         latent_dim=latent_dim,
