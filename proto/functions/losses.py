@@ -292,7 +292,7 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
     #loss = torch.cat([FPloss, FNloss]).mean()
     #loss = (fF * prob).mean()
     #print("loss",loss)
-    print(fF, prob)
+    #print(fF, prob)
 
     return loss
     
