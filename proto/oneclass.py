@@ -26,6 +26,8 @@ class ThetaInitializerPerPrototype():
         return torch.full((self.num_thetas,1), self.theta, requires_grad=True)
 
 
+theta_init = 0.05
+theta_trainable = True
 
 class OneClassMixin():
     def init_variant(self,):
@@ -33,12 +35,20 @@ class OneClassMixin():
         #theta = ThetaInitializerPerPrototype(num_thetas=self.proto_layer.labels.shape, theta=10.).generate()
         #theta = torch.randn(self.proto_layer.labels.shape,
         #                    device=self.device)
-        theta = torch.full(self.proto_layer.labels.shape, 0.2, device=self.device)
+        theta = torch.full(self.proto_layer.labels.shape, theta_init, device=self.device)
         theta = torch.pow(theta, 2)
         self.register_parameter("_theta", Parameter(theta))
         #self.loss = LambdaLayer(one_class_classifier_loss)
         self.loss = LambdaLayer(occ_mitRonny)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert
+
+    def init_variant_2(self,):
+        print(self.proto_layer.labels.shape)
+        otheta = torch.full(self.proto_layer.labels.shape, theta_init, device=self.device, requires_grad=theta_trainable)
+        theta = torch.abs(otheta)
+        self.register_parameter("_theta", Parameter(theta))
+        self.loss = LambdaLayer(occ_studentT_loss)
+        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
@@ -69,14 +79,6 @@ class OneClassGLVQv2(OneClassMixin, GLVQ):
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
 
-    def init_variant_2(self,):
-        print(self.proto_layer.labels.shape)
-        otheta = torch.full(self.proto_layer.labels.shape, 0.001, device=self.device)
-        theta = torch.abs(otheta)
-        self.register_parameter("_theta", Parameter(theta))
-        self.loss = LambdaLayer(occ_studentT_loss)
-        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
-
 
 
 class OneClassGMLVQv2(OneClassMixin, GMLVQ):
@@ -85,14 +87,6 @@ class OneClassGMLVQv2(OneClassMixin, GMLVQ):
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
-
-    def init_variant_2(self,):
-        print(self.proto_layer.labels.shape)
-        otheta = torch.full(self.proto_layer.labels.shape, 0.1, device=self.device)
-        theta = torch.abs(otheta)
-        self.register_parameter("_theta", Parameter(theta))
-        self.loss = LambdaLayer(occ_studentT_loss)
-        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
     def lambda_matrix(self):
         lam = self._omega @ self._omega.T
@@ -132,14 +126,6 @@ class OneClassLGMLVQv2(OneClassMixin, LGMLVQ):
 
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
-
-    def init_variant_2(self,):
-        print(self.proto_layer.labels.shape)
-        otheta = torch.full(self.proto_layer.labels.shape, 0.03, device=self.device)
-        theta = torch.abs(otheta)
-        self.register_parameter("_theta", Parameter(theta))
-        self.loss = LambdaLayer(occ_studentT_loss)
-        self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
     """
     def lambda_matrix(self):
