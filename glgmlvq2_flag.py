@@ -29,13 +29,8 @@ if __name__ == "__main__":
     blobs_per_class = 1
 
     # Dataset
-<<<<<<< HEAD
     #train_ds = pt.datasets.Spiral(num_samples=num_samples, noise=0.5)
     train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
-=======
-    train_ds = pt.datasets.Spiral(num_samples=num_samples, noise=0.5)
-    #train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
->>>>>>> 458129fb3102f3bf456e369e2237f8c636986714
     
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
