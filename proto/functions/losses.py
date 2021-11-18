@@ -278,6 +278,7 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
     # calc loss
     loss = (fF * prob).mean()
     #print("loss",loss)
+    print(fF, prob)
 
     return loss
     
