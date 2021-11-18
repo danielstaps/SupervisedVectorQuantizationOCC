@@ -29,7 +29,7 @@ if __name__ == "__main__":
     blobs_per_class = 1
 
     # Dataset
-    #train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
+    #train_ds = pt.datasets.Spiral(num_samples=num_samples, noise=0.5)
     train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
     
     # Dataloaders
@@ -48,8 +48,8 @@ if __name__ == "__main__":
         #transfer_function="sigmoid_beta",
         #transfer_beta=10.0,
         #lr=0.1,
-        proto_lr=0.005,
-        bb_lr=0.001,
+        proto_lr=0.01,
+        bb_lr=0.01,
     )
 
     # Initialize the model
@@ -57,7 +57,7 @@ if __name__ == "__main__":
                            optimizer=torch.optim.Adam,
                            #prototypes_initializer=pt.core.SMCI(train_ds),
                            prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
-                           omega_initializer=pt.core.PCALTI(train_ds.data)
+                           #omega_initializer=pt.core.PCALTI(train_ds.data)
                            )
 
     print(model)

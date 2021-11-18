@@ -45,7 +45,7 @@ if __name__ == "__main__":
         distribution=(num_classes, prototypes_per_class),
         #transfer_function="sigmoid_beta",
         #transfer_beta=10.0,
-        lr=0.05,
+        lr=0.01,
     )
 
     # Initialize the model

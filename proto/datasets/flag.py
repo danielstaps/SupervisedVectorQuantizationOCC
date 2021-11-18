@@ -3,6 +3,8 @@
 import numpy as np
 import torch
 
+np.random.seed(42)
+
 
 def make_flag(num_samples=300, dimensions=2, num_classes=1, blobs_per_class=1, elipses=True):
     """ Generates a variation of the PalauFlag """
@@ -11,7 +13,9 @@ def make_flag(num_samples=300, dimensions=2, num_classes=1, blobs_per_class=1, e
    
     test = 1
 
-    blob_mean = np.random.uniform(low=0.1, high=0.9, size=(num_classes*blobs_per_class, dimensions))
+    #blob_mean = np.random.uniform(low=0.1, high=0.9, size=(num_classes*blobs_per_class, dimensions))
+    blob_mean = np.random.uniform(low=0.5, high=0.5, size=(num_classes*blobs_per_class, dimensions))
+    blob_mean[:,0] = 0.2
     blob_bord = np.random.uniform(low=0.05*dimensions*test, high=0.15*dimensions*test, size=(num_classes*blobs_per_class, dimensions))
 
     for target in range(num_classes):
