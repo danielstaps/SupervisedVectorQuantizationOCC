@@ -265,11 +265,12 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
+    """
     if torch.cuda.is_available():
         device = 'cuda:0'
     else:
         device = 'cpu'
-
+    """
     # get probabilty from distribution
     prob = studentT(distances, theta_boundary)
     #print("\nprobability sT:",prob)
