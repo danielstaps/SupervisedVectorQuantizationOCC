@@ -12,7 +12,7 @@ from proto.datasets.flag import Flag
 from proto.oneclass import OneClassGMLVQv2
 
 
-CUDA = False
+CUDA = True
 
 
 if __name__ == "__main__":
