@@ -38,6 +38,9 @@ def occ_brier_score(distances, target_labels, prototype_labels, theta_boundary, 
 
     # calc loss
     c = (torch.amax(prototype_labels) + 1) - target_labels
+    zero = torch.Tensor([[0]])
+    print(zero)
+    print(studentT(zero, theta_boundary))
     loss = (prob - c.float()) ** 2
     print("brier score:",loss.mean())
 
