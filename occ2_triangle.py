@@ -1,5 +1,5 @@
 """GLVQ example using the spiral dataset."""
-
+import sys
 import argparse
 
 import pytorch_lightning as pl
@@ -13,15 +13,11 @@ from prototorch.datasets import NumpyDataset
 #from proto.datasets.flag import Flag
 from proto.oneclass import OneClassGLVQv2, OneClassGMLVQv2, OneClassLGMLVQv2
 
-from torchvision.datasets import MNIST
-
-from sklearn.datasets import load_digits
 from sklearn.metrics import confusion_matrix
 
 import matplotlib.pyplot as plt
 
-from img_preproc import give_data_back
-
+from proto.datasets.triangle import Triangle
 
 CUDA = True
 
@@ -34,56 +30,33 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Dataset
-    num_classes = 1
+    num_classes = 3
 
-    """
-    mnist = load_digits()
-    print(mnist.keys())
-
-    print(mnist['data'].shape, mnist['target'].shape)
-    x = mnist['data']/np.amax(mnist['data'])
-    y = mnist['target']
-    y = np.where(y == 4, 0, 1)
-    print(y)
-
-    train_ds = NumpyDataset(x, y)
-
-    # Dataloaders
-    train_loader = torch.utils.data.DataLoader(train_ds,
-                                               num_workers=0,
-                                               batch_size=train_ds.data.shape[0],
-                                               )
-    """
-
-
-    (x_train, y_train), (x_test, y_test) = give_data_back()
-    
-    train_ds = NumpyDataset(x_train, y_train)
+    train_ds = Triangle(num_samples=1000, dimensions=2, num_classes=3)
+  
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(train_ds,
                                                num_workers=4,
-                                               #batch_size=train_ds.data.shape[0]//2000,
-                                               batch_size=train_ds.data.shape[0]//10
-                                               #batch_size=1000,
-                                               #batch_size=100
+                                               batch_size=train_ds.data.shape[0],
                                                )
-   
+  
+    """
     test_ds = NumpyDataset(x_test, y_test)
     # Dataloaders
     test_loader = torch.utils.data.DataLoader(test_ds,
                                               num_workers=4,
                                               batch_size=test_ds.data.shape[0],
                                               )
-
-
+    """
+    
 
 
     # Hyperparameters
-    prototypes_per_class = 3
+    prototypes_per_class = 1
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
-        input_dim=x_train.shape[1],
-        latent_dim=10,
+        input_dim=2,
+        latent_dim=2,
         #transfer_function="sigmoid_beta",
         #transfer_beta=10.0,
         proto_lr=0.01,
@@ -92,14 +65,15 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassGMLVQv2(hparams,
+    model = OneClassGMLVQv2(
+                            hparams,
                             optimizer=torch.optim.Adam,
-                            #prototypes_initializer=pt.core.SMCI(train_ds),
-                            prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2), 
+                            prototypes_initializer=pt.core.SMCI(train_ds),
+                            #prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2), 
                             )
 
     # Callbacks
-    vis = pt.models.VisGMLVQ2D(
+    vis = pt.models.VisGLVQ2D(
         train_ds, 
         show_last_only=False, 
         block=False
@@ -117,7 +91,7 @@ if __name__ == "__main__":
         trainer = pl.Trainer.from_argparse_args(
             args,
             callbacks=[
-                #vis,
+                vis,
                 # pruning,
             ],
             terminate_on_nan=True,
@@ -134,7 +108,15 @@ if __name__ == "__main__":
         )
     # Training loop
     trainer.fit(model, train_loader)
-    
+   
+    # Confusion matrix
+    x_train = torch.Tensor(x_train)
+    d = model.compute_distances(x_train)
+    y_pred = model.predict_from_distances(d)
+
+    print(confusion_matrix(y_train, y_pred.cpu().numpy()))
+
+    """
     # Testing
     trainer.test(model, test_dataloaders=test_loader)
    
@@ -144,3 +126,4 @@ if __name__ == "__main__":
     y_pred = model.predict_from_distances(d)
 
     print(confusion_matrix(y_test, y_pred.cpu().numpy()))
+    """

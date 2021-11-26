@@ -6,6 +6,7 @@ from torch.nn.parameter import Parameter
 from prototorch.models.glvq import GLVQ, SiameseGLVQ, GMLVQ, LGMLVQ
 from .functions.competitions import wtac_thresh
 from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny, occ_studentT_loss, occ_studentT_loss_v2
+from .functions.losses_csi import occ_csi_soft_loss, occ_brier_score, occ_heidke_skill_score
 from prototorch.nn import LambdaLayer
 
 from prototorch.core.distances import (
@@ -47,7 +48,10 @@ class OneClassMixin():
         otheta = torch.full(self.proto_layer.labels.shape, theta_init, device=self.device, requires_grad=theta_trainable)
         theta = torch.abs(otheta)
         self.register_parameter("_theta", Parameter(theta))
-        self.loss = LambdaLayer(occ_studentT_loss)
+        #self.loss = LambdaLayer(occ_studentT_loss)
+        self.loss = LambdaLayer(occ_csi_soft_loss)
+        #self.loss = LambdaLayer(occ_brier_score)
+        #self.loss = LambdaLayer(occ_heidke_skill_score)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
