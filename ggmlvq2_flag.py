@@ -26,11 +26,11 @@ if __name__ == "__main__":
     num_samples = 1000
     dimensions = 2
     num_classes = 1
-    blobs_per_class = 1
+    blobs_per_class = 2
     latent_dim = 2
 
     # Dataset
-    train_ds = pt.datasets.Spiral(num_samples=500, noise=0.5)
+    train_ds = pt.datasets.Spiral(num_samples=num_samples, noise=0.5)
     #train_ds = Flag(num_samples, dimensions, num_classes, blobs_per_class)
     
     # Dataloaders
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         #transfer_beta=10.0,
         #lr=0.1,
         proto_lr=0.005,
-        bb_lr=0.001,
+        bb_lr=0.005,
     )
 
     # Initialize the model
