@@ -216,22 +216,43 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
 
 
 """ implementation of student-t distribution """
-def studentT(distances, theta_boundary):
+def studentT_fct(distances, theta_boundary):
     torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
     #print("theta",theta_boundary, theta_boundary.shape)
     prefactor = 1 / (torch.pi * theta_boundary)
     #print("prefa",prefactor, prefactor.shape)
 
-    winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
     #print("distances",distances)
     distribution = 1 / (1 + (distances / (theta_boundary ** 2)))
 
     studentT = prefactor * distribution
-    #studentT = distribution
-    studentT = studentT.gather(1, winning_indices.unsqueeze(1)).squeeze()
 
     return studentT
+
+def studentT(distances, theta_boundary, norm=False, idx=None):
+ 
+    # probabilitys of heavy tailed fct
+    probs = studentT_fct(distances, theta_boundary)
+    
+    # normalize
+    if norm:
+        zero = torch.Tensor([[0]])
+        norm_scalar = studentT_fct(zero, theta_boundary)
+        probs = probs / norm_scalar
+   
+    if type(idx) == torch.Tensor:
+        print(probs)
+        print(idx)
+        winning_indices = idx
+    else:
+        # winning indices of prototypes
+        winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
+    
+    #studentT = distribution
+    probs = probs.gather(1, winning_indices.unsqueeze(1)).squeeze()
+    print(probs)
+    return probs
 
 
 def error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device):

@@ -13,7 +13,7 @@ def occ_csi_soft_loss(distances, target_labels, prototype_labels, theta_boundary
     prob = studentT(distances, theta_boundary)
 
     # filter FP, FN
-    TP, TN, FP, FN = error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device) 
+    TP, TN, FP, FN = error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device)
 
     # calc loss
     TPloss = (TP * prob)
@@ -34,15 +34,16 @@ def occ_brier_score(distances, target_labels, prototype_labels, theta_boundary, 
     OneClassClassifier loss function implemented with Student-t distribution
     """
     # get probabilty from distribution
-    prob = studentT(distances, theta_boundary)
+    prob = studentT(distances, theta_boundary, norm=True, idx=target_labels)
 
     # calc loss
     c = (torch.amax(prototype_labels) + 1) - target_labels
-    zero = torch.Tensor([[0]])
-    print(zero)
-    print(studentT(zero, theta_boundary))
+    c = torch.where(c == 0, 0, 1)
+
+    #print(prob)
+    #print(prob/norm_scalar)
     loss = (prob - c.float()) ** 2
-    print("brier score:",loss.mean())
+    #print("brier score:",loss.mean())
 
     return loss.mean()
 

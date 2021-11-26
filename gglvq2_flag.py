@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 1
+    num_classes = 2
     blobs_per_class = 1
 
     # Dataset
