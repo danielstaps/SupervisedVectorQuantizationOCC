@@ -236,14 +236,14 @@ def studentT(distances, theta_boundary, norm=False, idx=None):
     probs = studentT_fct(distances, theta_boundary)
     
     # normalize
-    if norm:
-        zero = torch.Tensor([[0]])
-        norm_scalar = studentT_fct(zero, theta_boundary)
-        probs = probs / norm_scalar
+    #if norm:
+    zero = torch.Tensor([[0]])
+    norm_scalar = studentT_fct(zero, theta_boundary)
+    probs = probs / norm_scalar
    
     if type(idx) == torch.Tensor:
         print(probs)
-        print(idx)
+        #print(idx)
         winning_indices = idx
     else:
         # winning indices of prototypes
