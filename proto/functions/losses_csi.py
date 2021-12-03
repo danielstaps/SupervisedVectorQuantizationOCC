@@ -22,7 +22,7 @@ def occ_csi_soft_loss(distances, target_labels, prototype_labels, theta_boundary
 
     csi = (TPloss + 1) / (FNloss + FPloss + TPloss)
     csi_orig = (TP.sum()) / (FN.sum() + FP.sum() + TP.sum())
-    print("csi score:",csi_orig)
+    #print("csi score:",csi_orig)
     #print(csi.mean())
     loss = 1 / csi
 

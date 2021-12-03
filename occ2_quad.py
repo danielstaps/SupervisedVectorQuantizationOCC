@@ -29,12 +29,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Dataset
-    num_classes = 3
+    num_classes = 1
 
-    for feature in ["bow_vec", "nat_vec","mif_vec","rmif_vec"]:
+    #for feature in ["bow_vec", "nat_vec","mif_vec","rmif_vec"]:
+    for feature in ["nat_vec"]:
 
         q = Quad(feature=feature)
         print(q.data, q.target)
+        
+        print("isnan:",sum(np.isnan(q.data)), sum(np.isnan(q.target)))
 
         k_split = 10
         d = np.array_split(q.data, k_split)
@@ -88,7 +91,7 @@ if __name__ == "__main__":
                                     )
 
             # Callbacks
-            vis = pt.models.VisGLVQ2D(
+            vis = pt.models.VisGMLVQ2D(
                 train_ds, 
                 show_last_only=False, 
                 block=False

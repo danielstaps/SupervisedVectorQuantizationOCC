@@ -242,7 +242,7 @@ def studentT(distances, theta_boundary, norm=False, idx=None):
     probs = probs / norm_scalar
    
     if type(idx) == torch.Tensor:
-        print(probs)
+        #print("probs_normed:",probs)
         #print(idx)
         winning_indices = idx
     else:
@@ -251,7 +251,7 @@ def studentT(distances, theta_boundary, norm=False, idx=None):
     
     #studentT = distribution
     probs = probs.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    print(probs)
+    #print("gathered:",probs)
     return probs
 
 

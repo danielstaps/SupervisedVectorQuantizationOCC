@@ -44,7 +44,7 @@ class OneClassMixin():
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert
 
     def init_variant_2(self,):
-        print(self.proto_layer.labels.shape)
+        print("label_shape:",self.proto_layer.labels.shape)
         otheta = torch.full(self.proto_layer.labels.shape, theta_init, device=self.device, requires_grad=theta_trainable)
         theta = torch.abs(otheta)
         self.register_parameter("_theta", Parameter(theta))
