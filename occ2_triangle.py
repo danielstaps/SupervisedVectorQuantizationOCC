@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from proto.datasets.triangle import Triangle
 
-CUDA = True
+CUDA = False
 
 
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
                 # pruning,
             ],
             terminate_on_nan=True,
-            gpus='0'
+            gpus=1
         )
     else:
         trainer = pl.Trainer.from_argparse_args(

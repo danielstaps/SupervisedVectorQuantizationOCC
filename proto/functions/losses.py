@@ -2,6 +2,9 @@
 
 import torch
 
+from .distributions import studentT
+from .confusion import error_type_determination
+
 
 def _get_matcher(targets, labels, device='cpu'):
     """Returns a boolean tensor."""
@@ -212,76 +215,6 @@ def occ_mitRonny(distances, target_labels, prototype_labels, theta_boundary, dev
     mu = mud + muf
 
     return mu.mean()
-
-
-
-""" implementation of student-t distribution """
-def studentT_fct(distances, theta_boundary):
-    torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
-
-    #print("theta",theta_boundary, theta_boundary.shape)
-    prefactor = 1 / (torch.pi * theta_boundary)
-    #print("prefa",prefactor, prefactor.shape)
-
-    #print("distances",distances)
-    distribution = 1 / (1 + (distances / (theta_boundary ** 2)))
-
-    studentT = prefactor * distribution
-
-    return studentT
-
-def studentT(distances, theta_boundary, norm=False, idx=None):
- 
-    # probabilitys of heavy tailed fct
-    probs = studentT_fct(distances, theta_boundary)
-    
-    # normalize
-    #if norm:
-    zero = torch.Tensor([[0]])
-    norm_scalar = studentT_fct(zero, theta_boundary)
-    probs = probs / norm_scalar
-   
-    if type(idx) == torch.Tensor:
-        #print("probs_normed:",probs)
-        #print(idx)
-        winning_indices = idx
-    else:
-        # winning indices of prototypes
-        winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
-    
-    #studentT = distribution
-    probs = probs.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    #print("gathered:",probs)
-    return probs
-
-
-def error_type_determination(distances, theta_boundary, target_labels, prototype_labels, device):
-    matcher = _get_matcher(target_labels, prototype_labels, device=device)
-    not_matcher = torch.bitwise_not(matcher)
-
-    winning_indices = torch.min(distances, dim=1).indices # list of winning prototypes
-    d_tilde = torch.subtract(distances, theta_boundary)
-
-    #print("d_tilde",d_tilde[:10])
-    #print("matcher",matcher[:10])
-
-    is_in_bound = d_tilde < 0
-    is_out_of_bound = d_tilde >= 0
-
-    TP = torch.logical_and(is_in_bound, matcher)
-    TN = torch.logical_and(is_out_of_bound, not_matcher)
-    FP = torch.logical_and(is_in_bound, not_matcher)
-    FN = torch.logical_and(is_out_of_bound, matcher)
-
-    #fF = torch.add(case1, case2)
-    #fF = fF.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    #print("fF",fF)
-    TP = TP.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    TN = TN.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    FP = FP.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    FN = FN.gather(1, winning_indices.unsqueeze(1)).squeeze()
-
-    return TP, TN, FP, FN
 
 
 def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary, device='cpu'):
