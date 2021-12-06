@@ -50,13 +50,13 @@ if __name__ == "__main__":
         #transfer_function="sigmoid_beta",
         #transfer_beta=10.0,
         #lr=0.1,
-        proto_lr=0.005,
-        bb_lr=0.005,
+        proto_lr=0.01,
+        bb_lr=0.01,
     )
 
     # Initialize the model
     model = OneClassGMLVQv2(hparams,
-                           optimizer=torch.optim.Adam,
+                           optimizer=torch.optim.SGD,
                            #prototypes_initializer=pt.core.SMCI(train_ds),
                            prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
                            #omega_initializer=pt.core.PCALTI(train_ds.data),

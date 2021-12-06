@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     #now = datetime.now()
     #current_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-    current_time = "2021-12-05_2_csi"
+    current_time = "2021-12-06_brier_withoutTP"
     if not os.path.isdir(current_time):
         os.mkdir(current_time)
 

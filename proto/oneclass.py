@@ -6,7 +6,7 @@ from torch.nn.parameter import Parameter
 from prototorch.models.glvq import GLVQ, SiameseGLVQ, GMLVQ, LGMLVQ
 from .functions.competitions import wtac_thresh
 from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny, occ_studentT_loss, occ_studentT_loss_v2
-from .functions.losses_csi import occ_csi_soft_loss, occ_brier_score, occ_heidke_skill_score, occ_brier_score2
+from .functions.losses_csi import occ_csi_soft_loss, occ_brier_score, occ_heidke_skill_score, occ_brier_score2, occ_csi_soft_loss2
 from prototorch.nn import LambdaLayer
 
 from prototorch.core.distances import (
@@ -28,7 +28,7 @@ class ThetaInitializerPerPrototype():
         return torch.full((self.num_thetas,1), self.theta, requires_grad=True)
 
 
-theta_init = 0.05
+theta_init = 0.005
 theta_trainable = True
 
 class OneClassMixin():
@@ -51,17 +51,15 @@ class OneClassMixin():
         self.register_parameter("_theta", Parameter(theta))
         #self.loss = LambdaLayer(occ_studentT_loss)
         #self.loss = LambdaLayer(occ_csi_soft_loss)
+        self.loss = LambdaLayer(occ_csi_soft_loss2)
         #self.loss = LambdaLayer(occ_brier_score)
-        self.loss = LambdaLayer(occ_brier_score2)
+        #self.loss = LambdaLayer(occ_brier_score2)
         #self.loss = LambdaLayer(occ_heidke_skill_score)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
     def init_params(self,):
         self.lr_scheduler = ExponentialLR
         self.lr_scheduler_kwargs = dict(gamma=0.99, verbose=False)
-
-    def on_batch_start(self,):
-        print(self.optimizer.param_groups[0]['lr'])
     
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
