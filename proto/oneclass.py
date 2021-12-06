@@ -6,7 +6,7 @@ from torch.nn.parameter import Parameter
 from prototorch.models.glvq import GLVQ, SiameseGLVQ, GMLVQ, LGMLVQ
 from .functions.competitions import wtac_thresh
 from .functions.losses import one_class_classifier_loss, one_class_classifier_triplet_loss, occ_loss, occ_mitRonny, occ_studentT_loss, occ_studentT_loss_v2
-from .functions.losses_csi import occ_csi_soft_loss, occ_brier_score, occ_heidke_skill_score
+from .functions.losses_csi import occ_csi_soft_loss, occ_brier_score, occ_heidke_skill_score, occ_brier_score2
 from prototorch.nn import LambdaLayer
 
 from prototorch.core.distances import (
@@ -16,6 +16,7 @@ from prototorch.core.distances import (
     euclidean_distance,
 )
 
+from torch.optim.lr_scheduler import ExponentialLR
 
 
 class ThetaInitializerPerPrototype():
@@ -49,11 +50,19 @@ class OneClassMixin():
         theta = torch.abs(otheta)
         self.register_parameter("_theta", Parameter(theta))
         #self.loss = LambdaLayer(occ_studentT_loss)
-        self.loss = LambdaLayer(occ_csi_soft_loss)
+        #self.loss = LambdaLayer(occ_csi_soft_loss)
         #self.loss = LambdaLayer(occ_brier_score)
+        self.loss = LambdaLayer(occ_brier_score2)
         #self.loss = LambdaLayer(occ_heidke_skill_score)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
 
+    def init_params(self,):
+        self.lr_scheduler = ExponentialLR
+        self.lr_scheduler_kwargs = dict(gamma=0.99, verbose=False)
+
+    def on_batch_start(self,):
+        print(self.optimizer.param_groups[0]['lr'])
+    
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
         out = self.compute_distances(x)
@@ -82,6 +91,7 @@ class OneClassGLVQv2(OneClassMixin, GLVQ):
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
+        self.init_params()
 
 
 
@@ -91,6 +101,7 @@ class OneClassGMLVQv2(OneClassMixin, GMLVQ):
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
+        self.init_params()
 
     def lambda_matrix(self):
         lam = self._omega @ self._omega.T
@@ -130,6 +141,7 @@ class OneClassLGMLVQv2(OneClassMixin, LGMLVQ):
 
         #super().__init__(hparams, **kwargs)
         self.init_variant_2()
+        self.init_params()
 
     """
     def lambda_matrix(self):
@@ -160,6 +172,7 @@ class OneClassGLVQ(OneClassMixin, GLVQ):
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
         self.init_variant()
+        self.init_params()
 
 
 
@@ -169,6 +182,7 @@ class OneClassGMLVQ(OneClassMixin, GMLVQ):
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
         self.init_variant()
+        self.init_params()
 
     def lambda_matrix(self):
         lam = self._omega @ self._omega.T
@@ -208,6 +222,7 @@ class OneClassLGMLVQ(OneClassMixin, LGMLVQ):
 
         #super().__init__(hparams, **kwargs)
         self.init_variant()
+        self.init_params()
 
     """
     def lambda_matrix(self):

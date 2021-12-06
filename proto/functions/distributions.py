@@ -17,15 +17,48 @@ def studentT_fct(distances, theta_boundary, device='cpu'):
 
     return studentT
 
-def studentT(distances, theta_boundary, idx=None, prototype_labels=None, device='cpu'): 
-    # probabilitys of heavy tailed fct
-    probs = studentT_fct(distances, theta_boundary, device=device)
+
+def gaussian_fct(distances, theta_boundary, device='cpu'):
+    torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
+    
+    prefactor = 1 / (theta_boundary * torch.sqrt(torch.Tensor([[2]]) * torch.pi))
+
+    exponent = - (1/2) * (distances / theta_boundary) ** 2
+    distribution = torch.exp(exponent)
+
+    gauss = prefactor * distribution
+   
+    return gauss
+
+
+def sigmoid_fct(distances, theta_boundary, device='cpu'):
+    
+    exponent = - (theta_boundary - distances)
+
+    fct = 1 / (1 + torch.exp(exponent))
+
+    return fct
+
+
+def distribution_handler(distances, theta_boundary, distribution='studentT',
+    idx=None, prototype_labels=None, pass_probs=False, device='cpu'):
+
+    if distribution == "studentT":
+        # probabilitys of heavy tailed fct
+        probs = studentT_fct(distances, theta_boundary, device=device)
+    elif distribution == "gauss":
+        probs = gaussian_fct(distances, theta_boundary, device=device)
+    elif distribution == "sigmoid":
+        probs = sigmoid_fct(distances, theta_boundary, device=device)
     
     # normalize
     zero = torch.Tensor([[0]])
     norm_scalar = studentT_fct(zero, theta_boundary)
     probs = probs / norm_scalar
-  
+    
+    if pass_probs:
+        return probs
+
     #print(studentT_fct(theta_boundary, theta_boundary)/norm_scalar)
 
     if type(idx) == torch.Tensor:
@@ -45,4 +78,3 @@ def studentT(distances, theta_boundary, idx=None, prototype_labels=None, device=
     #print("gathered:",probs)
 
     return probs
-

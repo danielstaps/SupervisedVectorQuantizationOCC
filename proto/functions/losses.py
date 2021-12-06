@@ -2,7 +2,7 @@
 
 import torch
 
-from .distributions import studentT
+from .distributions import distribution_handler
 from .confusion import error_type_determination
 
 
@@ -229,7 +229,7 @@ def occ_studentT_loss(distances, target_labels, prototype_labels, theta_boundary
         device = 'cpu'
     """
     # get probabilty from distribution
-    prob = studentT(distances, theta_boundary)
+    prob = distribution_handler(distances, theta_boundary)
     #print("\nprobability sT:",prob)
 
     # filter FP, FN
@@ -260,7 +260,7 @@ def occ_studentT_loss_v2(distances, target_labels, prototype_labels, theta_bound
     """
    
     # get probabilty from distribution
-    prob = studentT(distances, theta_boundary)
+    prob = distribution_handler(distances, theta_boundary)
     #print("\nprobability sT:",prob)
 
     # filter FP, FN

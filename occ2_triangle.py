@@ -29,7 +29,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Dataset
-    num_classes = 3
+    num_classes = 2
 
     train_ds = Triangle(num_samples=1000, dimensions=2, num_classes=3)
   

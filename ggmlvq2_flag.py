@@ -11,6 +11,7 @@ import prototorch as pt
 from proto.datasets.flag import Flag
 from proto.oneclass import OneClassGMLVQv2
 
+from pytorch_lightning.callbacks import LearningRateMonitor
 
 CUDA = True
 
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 1
+    num_classes = 2
     blobs_per_class = 1
     latent_dim = 2
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = 1
+    prototypes_per_class = 2
     hparams = dict(
         input_dim=dimensions,
         latent_dim=latent_dim,
@@ -74,13 +75,15 @@ if __name__ == "__main__":
         frequency=1,
         verbose=True,
     )   
-    
+    lr_monitor = LearningRateMonitor(logging_interval='step')    
+
     # Setup trainer
     if CUDA:
         trainer = pl.Trainer.from_argparse_args(
             args,
             callbacks=[
                 vis,
+                lr_monitor,
                 # pruning,
             ],
             terminate_on_nan=True,
@@ -91,6 +94,7 @@ if __name__ == "__main__":
             args,
             callbacks=[
                 vis,
+                lr_monitor,
                 # pruning,
             ],
             terminate_on_nan=True,
