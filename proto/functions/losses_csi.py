@@ -24,7 +24,9 @@ def occ_csi_soft_loss(distances, target_labels, prototype_labels, theta_boundary
     FNloss = 1 - (FN.to(device) * prob.to(device))
     #print("conf",TPloss, FPloss, FNloss)
 
-    csi = (TPloss + 10e-8) / (FNloss + FPloss + TPloss)
+    TPloss = torch.where(TPloss <= torch.Tensor([[1e-4]]), torch.tensor([[1e-4]]), TPloss)
+
+    csi = (TPloss) / (FNloss + FPloss + TPloss)
     #print("csi",csi)
     csi_orig = (TP.sum()) / (FN.sum() + FP.sum() + TP.sum())
     print("csi score:",csi_orig)

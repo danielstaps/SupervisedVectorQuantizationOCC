@@ -1,6 +1,7 @@
 """ One Class Classifier based on GLVQ framework """
 
 import torch
+import numpy as np
 from torch.nn.parameter import Parameter
 
 from prototorch.models.glvq import GLVQ, SiameseGLVQ, GMLVQ, LGMLVQ
@@ -28,8 +29,6 @@ class ThetaInitializerPerPrototype():
         return torch.full((self.num_thetas,1), self.theta, requires_grad=True)
 
 
-theta_init = 0.005
-theta_trainable = True
 
 class OneClassMixin():
     def init_variant(self,):
@@ -44,15 +43,15 @@ class OneClassMixin():
         self.loss = LambdaLayer(occ_mitRonny)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert
 
-    def init_variant_2(self,):
+    def init_variant_2(self, theta_init=0.005, theta_trainable=True):
         print("label_shape:",self.proto_layer.labels.shape)
         otheta = torch.full(self.proto_layer.labels.shape, theta_init, device=self.device, requires_grad=theta_trainable)
         theta = torch.abs(otheta)
         self.register_parameter("_theta", Parameter(theta))
         #self.loss = LambdaLayer(occ_studentT_loss)
         #self.loss = LambdaLayer(occ_csi_soft_loss)
-        self.loss = LambdaLayer(occ_csi_soft_loss2)
-        #self.loss = LambdaLayer(occ_brier_score)
+        #self.loss = LambdaLayer(occ_csi_soft_loss2)
+        self.loss = LambdaLayer(occ_brier_score)
         #self.loss = LambdaLayer(occ_brier_score2)
         #self.loss = LambdaLayer(occ_heidke_skill_score)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   
@@ -96,9 +95,16 @@ class OneClassGLVQv2(OneClassMixin, GLVQ):
 class OneClassGMLVQv2(OneClassMixin, GMLVQ):
     def __init__(self, hparams, **kwargs):
         distance_fn = kwargs.pop("distance_fn", omega_distance)
+        x_train = kwargs.pop("theta_initializer")
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
-        self.init_variant_2()
+
+        #x_train = torch.Tensor(x_train)
+        d = self.compute_distances(x_train).detach().numpy()
+        theta_init = float(np.mean(d, axis=0))
+        print("d median",theta_init)
+
+        self.init_variant_2(theta_init=theta_init)
         self.init_params()
 
     def lambda_matrix(self):

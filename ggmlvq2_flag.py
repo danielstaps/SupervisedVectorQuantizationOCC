@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Dataset
     num_samples = 1000
     dimensions = 2
-    num_classes = 2
+    num_classes = 1
     blobs_per_class = 1
     latent_dim = 2
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                                                )
         
     # Hyperparameters
-    prototypes_per_class = 2
+    prototypes_per_class = 1
     hparams = dict(
         input_dim=dimensions,
         latent_dim=latent_dim,
@@ -56,9 +56,10 @@ if __name__ == "__main__":
 
     # Initialize the model
     model = OneClassGMLVQv2(hparams,
-                           optimizer=torch.optim.SGD,
-                           #prototypes_initializer=pt.core.SMCI(train_ds),
-                           prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
+                           optimizer=torch.optim.Adam,
+                           prototypes_initializer=pt.core.SMCI(train_ds),
+                           theta_initializer=train_ds.data[train_ds.target == 0]
+                           #prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),
                            #omega_initializer=pt.core.PCALTI(train_ds.data),
                            )
 
