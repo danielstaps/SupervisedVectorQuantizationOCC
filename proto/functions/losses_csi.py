@@ -80,6 +80,7 @@ def occ_brier_score(distances, target_labels, prototype_labels, theta_boundary, 
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
+    print(theta_boundary)
     # get probabilty from distribution
     prob = distribution_handler(distances, theta_boundary, distribution='studentT',
             idx=target_labels, prototype_labels=prototype_labels)
@@ -127,12 +128,12 @@ def occ_brier_score2(distances, target_labels, prototype_labels, theta_boundary,
         selected_distances = distances[:,protoii]
         selected_probs = prob[:,protoii]
         winning_indices = torch.min(selected_distances, dim=1).indices.to(device) # list of winning prototypes
-        true_negatives = TP[:,protoii].gather(1, winning_indices.unsqueeze(1)).squeeze()
-        not_true_neg = torch.bitwise_not(true_negatives)
+        #true_negatives = TP[:,protoii].gather(1, winning_indices.unsqueeze(1)).squeeze()
+        #not_true_neg = torch.bitwise_not(true_negatives)
         p = selected_probs.gather(1, winning_indices.unsqueeze(1)).squeeze()
         c = torch.where(target_labels == i, 1, 0)
-        p = p[not_true_neg]
-        c = c[not_true_neg]
+        #p = p[not_true_neg]
+        #c = c[not_true_neg]
         local_loss[i] = ((p - c) ** 2).mean()
 
     #                       prototypes = [      0       ,        1        ]

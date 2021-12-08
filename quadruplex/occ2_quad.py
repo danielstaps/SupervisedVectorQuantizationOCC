@@ -37,13 +37,13 @@ if __name__ == "__main__":
 
     #now = datetime.now()
     #current_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-    current_time = "2021-12-06_brier_withoutTP"
+    current_time = "2021-12-08_brier-original"
     if not os.path.isdir(current_time):
         os.mkdir(current_time)
 
     # Dataset
     num_classes = 1
-    for ta in [[2, 1],[4,1],[6,1],[2,2],[4,2],[6,2],[2,3],[4,3],[6,3]]:
+    for ta in [[2,1],[4,1],[6,1],[8,1],[10,1],[12,1]]:
         #for ta in [[4,1],[6,1],[2,2],[4,2],[6,2],[2,3],[4,3],[6,3]]:
 
         latent_dim = ta[0]
@@ -80,6 +80,11 @@ if __name__ == "__main__":
                 y_train = np.concatenate([t[i] for i in range(k_split) if i != k])
                 #print(x_train.shape, y_train.shape)
                 #print(x_test.shape, y_test.shape)
+                x_train_addition = np.repeat(x_train[y_train == 0,:], 2, axis=0)
+                y_train_addition = np.repeat(y_train[y_train == 0], 2)
+                x_train = np.append(x_train, x_train_addition, axis=0)
+                y_train = np.append(y_train, y_train_addition)
+                print(x_train.shape, y_train.shape)
 
                 print(f"class distribution in train and test:[{len(y_train)-sum(y_train),sum(y_train)}], [{len(y_test)-sum(y_test),sum(y_test)}]")
 
@@ -115,6 +120,7 @@ if __name__ == "__main__":
                         hparams,
                         optimizer=torch.optim.Adam,
                         prototypes_initializer=pt.core.SMCI(train_ds),
+                        theta_initializer=x_train,
                         #prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2), 
                         lr_scheduler=ExponentialLR,
                         lr_scheduler_kwargs=dict(gamma=0.99, verbose=False),

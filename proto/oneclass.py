@@ -20,13 +20,21 @@ from prototorch.core.distances import (
 from torch.optim.lr_scheduler import ExponentialLR
 
 
-class ThetaInitializerPerPrototype():
-    def __init__(self, num_thetas, theta=0.1):
-        self.theta = theta
-        self.num_thetas = num_thetas 
+class ThetaInitializer():
+    def __init__(self, x_train, num_thetas=None):
+        if num_thetas:
+            self.num_thetas = num_thetas 
+        if type(x_train) == np.ndarray:
+            x_train = torch.Tensor(x_train)
+        d = self.compute_distances(x_train).detach().numpy()
+        self.theta_init = float(np.mean(d, axis=0))
+        print("d median",theta_init)
 
-    def generate(self, ):
-        return torch.full((self.num_thetas,1), self.theta, requires_grad=True)
+    def theta(self,):
+        print("label_shape:",self.proto_layer.labels.shape)
+        otheta = torch.full(self.proto_layer.labels.shape, self.theta_init, device=self.device, requires_grad=theta_trainable)
+        theta = torch.abs(otheta)
+        return theta
 
 
 
@@ -43,11 +51,11 @@ class OneClassMixin():
         self.loss = LambdaLayer(occ_mitRonny)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert
 
-    def init_variant_2(self, theta_init=0.005, theta_trainable=True):
+    def init_variant_2(self, theta_init=theta_obj, theta_trainable=True):
         print("label_shape:",self.proto_layer.labels.shape)
         otheta = torch.full(self.proto_layer.labels.shape, theta_init, device=self.device, requires_grad=theta_trainable)
         theta = torch.abs(otheta)
-        self.register_parameter("_theta", Parameter(theta))
+        self.register_parameter("_theta", Parameter(theta_obj.theta))
         #self.loss = LambdaLayer(occ_studentT_loss)
         #self.loss = LambdaLayer(occ_csi_soft_loss)
         #self.loss = LambdaLayer(occ_csi_soft_loss2)
@@ -81,13 +89,13 @@ class OneClassMixin():
         return y_pred
 
 
-
 class OneClassGLVQv2(OneClassMixin, GLVQ):
     def __init__(self, hparams, **kwargs):
         distance_fn = kwargs.pop("distance_fn", squared_euclidean_distance)
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
-        self.init_variant_2()
+
+        self.init_variant_2(theta_init=ThetaInitializer(x_train))
         self.init_params()
 
 
@@ -99,12 +107,7 @@ class OneClassGMLVQv2(OneClassMixin, GMLVQ):
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
         #super().__init__(hparams, **kwargs)
 
-        #x_train = torch.Tensor(x_train)
-        d = self.compute_distances(x_train).detach().numpy()
-        theta_init = float(np.mean(d, axis=0))
-        print("d median",theta_init)
-
-        self.init_variant_2(theta_init=theta_init)
+        self.init_variant_2(theta_init=ThetaInitializer(x_train))
         self.init_params()
 
     def lambda_matrix(self):
@@ -144,7 +147,7 @@ class OneClassLGMLVQv2(OneClassMixin, LGMLVQ):
         self.register_parameter("_omega", Parameter(omega))
 
         #super().__init__(hparams, **kwargs)
-        self.init_variant_2()
+        self.init_variant_2(theta_init=ThetaInitializer(x_train))
         self.init_params()
 
     """
