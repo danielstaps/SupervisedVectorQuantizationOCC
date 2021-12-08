@@ -57,9 +57,9 @@ class OneClassMixin():
         print("label_shape:",self.proto_layer.labels.shape)
         self.register_parameter("_theta", Parameter(theta_init.theta()))
         #self.loss = LambdaLayer(occ_studentT_loss)
-        #self.loss = LambdaLayer(occ_csi_soft_loss)
+        self.loss = LambdaLayer(occ_csi_soft_loss)
         #self.loss = LambdaLayer(occ_csi_soft_loss2)
-        self.loss = LambdaLayer(occ_brier_score)
+        #self.loss = LambdaLayer(occ_brier_score)
         #self.loss = LambdaLayer(occ_brier_score2)
         #self.loss = LambdaLayer(occ_heidke_skill_score)
         self.wtac = wtac_thresh # Vorschlag, denn auch beim SMI-GMLVQ wird die wtac leicht abgeändert   

@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # Hyperparameters
     num_classes = 1
     prototypes_per_class = 1
-    latent_dim = 5
+    latent_dim = 2
     hparams = {
             'num_classes':num_classes,
             'prototypes_per_class':prototypes_per_class,

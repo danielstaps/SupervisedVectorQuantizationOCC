@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from datetime import datetime
 import pytorch_lightning as pl
 
 import prototorch as pt
@@ -7,11 +8,14 @@ from prototorch.datasets import NumpyDataset
 
 from proto.oneclass import OneClassGLVQv2, OneClassGMLVQv2, OneClassLGMLVQv2
 
+import os
+import pickle
+
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.model_selection import LeaveOneOut
 
-
+from proto.functions.callbacks import ThetaCallback
 
 def train_fct(x, y, train, test, results, params, args, model_type):
 
@@ -79,12 +83,14 @@ def train_fct(x, y, train, test, results, params, args, model_type):
         prune_quota_per_epoch=1,
         frequency=1,
         verbose=True,
-    )   
+    )
+    theta = ThetaCallback()
     
     # Setup trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
         callbacks=[
+            theta,
             #vis,
             # pruning,
         ],
@@ -146,7 +152,7 @@ def leaveoneout(fct, x, y, params, args, model_type):
     return results
 
 
-def kFoldOcc(data, params, args, model_type='mapping'):
+def kFoldOcc(data, params, args, model_type='mapping', experiment_name=''):
     # extract data
     if type(data) == tuple:
         (x, y) = data
@@ -176,4 +182,8 @@ def kFoldOcc(data, params, args, model_type='mapping'):
     print("conf_test:\n",np.mean(np.array(results['conf_test']),axis=0))
     print("acc_test\n",np.mean(np.array(results['acc_test']),axis=0))
 
-   
+    name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S"+experiment_name)
+    if not os.path.isdir('results'):
+        os.mkdir('results')
+    with open('results/'+name+'.pkl', 'wb') as pklfile:
+        pickle.dump(results, pklfile)

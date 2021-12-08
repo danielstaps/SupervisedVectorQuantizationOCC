@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     #now = datetime.now()
     #current_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-    current_time = "2021-12-08_brier-original"
+    current_time = "2021-12-08_csi-original"
     if not os.path.isdir(current_time):
         os.mkdir(current_time)
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         prototypes_per_class = ta[1]
 
         for feature in ["bow_vec", "nat_vec","mif_vec","rmif_vec"]:
-            #for feature in ["mif_vec", "rmif_vec"]:
+            #for feature in ["nat_vec"]:
             
             st_filename = 'CCM_' + feature + '_dim' + str(latent_dim) + '_p' + str(prototypes_per_class) + '_e' + str(args.max_epochs)
             
@@ -58,9 +58,13 @@ if __name__ == "__main__":
             #print(q.data, q.target)
 
             #print("isnan:",sum(np.isnan(q.data)), sum(np.isnan(q.target)))
-
+            
             k_split = 10
-            d = np.array_split(q.data, k_split)
+            data = q.data          
+            if feature == "nat_vec":
+                data = data - np.amin(data)
+                data = data / np.amax(data)
+            d = np.array_split(data, k_split)
             t = np.array_split(q.target, k_split)
 
             if [True for t in t if t.mean() == 1]:
