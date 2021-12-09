@@ -2,16 +2,14 @@
 
 import argparse
 
+import numpy as np
+import prototorch as pt
 import pytorch_lightning as pl
 import torch
-import numpy as np
-
-import prototorch as pt
+from pytorch_lightning.callbacks import LearningRateMonitor
 
 from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGMLVQv2
-
-from pytorch_lightning.callbacks import LearningRateMonitor
+from proto.oneclass import OneClassGMLVQ
 
 CUDA = True
 
@@ -55,7 +53,7 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassGMLVQv2(hparams,
+    model = OneClassGMLVQ(hparams,
                            optimizer=torch.optim.Adam,
                            prototypes_initializer=pt.core.SMCI(train_ds),
                            theta_initializer=train_ds.data[train_ds.target == 0]

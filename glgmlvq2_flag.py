@@ -2,15 +2,13 @@
 
 import argparse
 
+import numpy as np
+import prototorch as pt
 import pytorch_lightning as pl
 import torch
-import numpy as np
-
-import prototorch as pt
 
 from proto.datasets.flag import Flag
-from proto.oneclass import OneClassLGMLVQv2
-
+from proto.oneclass import OneClassLGMLVQ
 
 CUDA = True
 
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassLGMLVQv2(hparams,
+    model = OneClassLGMLVQ(hparams,
                            optimizer=torch.optim.Adam,
                            #prototypes_initializer=pt.core.SMCI(train_ds),
                            prototypes_initializer=pt.core.SSCI(train_ds, noise=1e-2),

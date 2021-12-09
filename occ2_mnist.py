@@ -2,30 +2,22 @@
 
 import argparse
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import prototorch as pt
 import pytorch_lightning as pl
 import torch
-import numpy as np
-import cv2
-
-import prototorch as pt
 from prototorch.datasets import NumpyDataset
-
-#from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGLVQv2, OneClassGMLVQv2, OneClassLGMLVQv2
-
-from torchvision.datasets import MNIST
-
 from sklearn.datasets import load_digits
 from sklearn.metrics import confusion_matrix
-
-import matplotlib.pyplot as plt
+from torchvision.datasets import MNIST
 
 from img_preproc import give_data_back
-
+#from proto.datasets.flag import Flag
+from proto.oneclass import OneClassGLVQ, OneClassGMLVQ, OneClassLGMLVQ
 
 CUDA = True
-
-
 
 if __name__ == "__main__":
     # Command-line arguments
@@ -35,7 +27,6 @@ if __name__ == "__main__":
 
     # Dataset
     num_classes = 1
-
     """
     mnist = load_digits()
     print(mnist.keys())
@@ -55,28 +46,26 @@ if __name__ == "__main__":
                                                )
     """
 
-
     (x_train, y_train), (x_test, y_test) = give_data_back()
-    
+
     train_ds = NumpyDataset(x_train, y_train)
     # Dataloaders
-    train_loader = torch.utils.data.DataLoader(train_ds,
-                                               num_workers=4,
-                                               #batch_size=train_ds.data.shape[0]//2000,
-                                               batch_size=train_ds.data.shape[0]//10
-                                               #batch_size=1000,
-                                               #batch_size=100
-                                               )
-   
+    train_loader = torch.utils.data.DataLoader(
+        train_ds,
+        num_workers=4,
+        #batch_size=train_ds.data.shape[0]//2000,
+        batch_size=train_ds.data.shape[0] // 10
+        #batch_size=1000,
+        #batch_size=100
+    )
+
     test_ds = NumpyDataset(x_test, y_test)
     # Dataloaders
-    test_loader = torch.utils.data.DataLoader(test_ds,
-                                              num_workers=4,
-                                              batch_size=test_ds.data.shape[0],
-                                              )
-
-
-
+    test_loader = torch.utils.data.DataLoader(
+        test_ds,
+        num_workers=4,
+        batch_size=test_ds.data.shape[0],
+    )
 
     # Hyperparameters
     prototypes_per_class = 3
@@ -92,26 +81,23 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassGMLVQv2(hparams,
-                            optimizer=torch.optim.Adam,
-                            #prototypes_initializer=pt.core.SMCI(train_ds),
-                            prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2), 
-                            )
+    model = OneClassGMLVQ(
+        hparams,
+        optimizer=torch.optim.Adam,
+        #prototypes_initializer=pt.core.SMCI(train_ds),
+        prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2),
+    )
 
     # Callbacks
-    vis = pt.models.VisGMLVQ2D(
-        train_ds, 
-        show_last_only=False, 
-        block=False
-    )
+    vis = pt.models.VisGMLVQ2D(train_ds, show_last_only=False, block=False)
     pruning = pt.models.PruneLoserPrototypes(
         threshold=0.01,
         idle_epochs=1,
         prune_quota_per_epoch=1,
         frequency=1,
         verbose=True,
-    )   
-    
+    )
+
     # Setup trainer
     if CUDA:
         trainer = pl.Trainer.from_argparse_args(
@@ -121,8 +107,7 @@ if __name__ == "__main__":
                 # pruning,
             ],
             terminate_on_nan=True,
-            gpus='0'
-        )
+            gpus='0')
     else:
         trainer = pl.Trainer.from_argparse_args(
             args,
@@ -134,10 +119,10 @@ if __name__ == "__main__":
         )
     # Training loop
     trainer.fit(model, train_loader)
-    
+
     # Testing
     trainer.test(model, test_dataloaders=test_loader)
-   
+
     # Confusion matrix
     x_test = torch.Tensor(x_test)
     d = model.compute_distances(x_test)

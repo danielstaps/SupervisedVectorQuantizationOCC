@@ -2,31 +2,23 @@
 
 import argparse
 
-import pytorch_lightning as pl
-import torch
-import numpy as np
 import cv2
-
+import matplotlib.pyplot as plt
+import numpy as np
 import prototorch as pt
-from prototorch.datasets import NumpyDataset
-
-#from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGLVQv2, OneClassGMLVQv2, OneClassLGMLVQv2
-
-from torchvision.datasets import MNIST
-
-from sklearn.datasets import load_digits
-from sklearn.metrics import confusion_matrix
-from skimage.transform import resize
-
-from keras.datasets import mnist, fashion_mnist, cifar10, cifar100
+import pytorch_lightning as pl
 import tensorflow as tf
 import tensorflow_datasets as tfds
+import torch
+from keras.datasets import cifar10, cifar100, fashion_mnist, mnist
+from prototorch.datasets import NumpyDataset
+from skimage.transform import resize
+from sklearn.datasets import load_digits
+from sklearn.metrics import confusion_matrix
+from torchvision.datasets import MNIST
 
-import matplotlib.pyplot as plt
-
-
-
+#from proto.datasets.flag import Flag
+from proto.oneclass import OneClassGLVQ, OneClassGMLVQ, OneClassLGMLVQ
 
 CUDA = True
 
@@ -84,7 +76,7 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassGMLVQv2(hparams,
+    model = OneClassGMLVQ(hparams,
                             optimizer=torch.optim.Adam,
                             #prototypes_initializer=pt.core.SMCI(train_ds),
                             prototypes_initializer=pt.core.SSCI(train_ds, noise=5e-2), 

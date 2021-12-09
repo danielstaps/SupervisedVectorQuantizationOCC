@@ -1,30 +1,23 @@
-import os
-import sys
-import pickle
 import argparse
-
-import pytorch_lightning as pl
-import torch
-import numpy as np
 import math
-from itertools import product
-from sortedcontainers import SortedList
+import os
+import pickle
+import sys
 from datetime import datetime
-
-import prototorch as pt
-from prototorch.datasets import NumpyDataset
-
-#from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGLVQv2, OneClassGMLVQv2, OneClassLGMLVQv2
-
-from sklearn.metrics import confusion_matrix
+from itertools import product
 
 import matplotlib.pyplot as plt
-
+import numpy as np
+import prototorch as pt
+import pytorch_lightning as pl
+import torch
 from proto.datasets.quad import Quad
-
+#from proto.datasets.flag import Flag
+from proto.oneclass import OneClassGLVQ, OneClassGMLVQ, OneClassLGMLVQ
+from prototorch.datasets import NumpyDataset
+from sklearn.metrics import confusion_matrix
+from sortedcontainers import SortedList
 from torch.optim.lr_scheduler import ExponentialLR
-
 
 CUDA = False
 
@@ -121,7 +114,7 @@ if __name__ == "__main__":
                         )
 
                 # Initialize the model
-                model = OneClassGMLVQv2(
+                model = OneClassGMLVQ(
                         hparams,
                         optimizer=torch.optim.Adam,
                         prototypes_initializer=pt.core.SMCI(train_ds),
