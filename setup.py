@@ -9,6 +9,7 @@ with open("README.md", "r") as fh:
 INSTALL_REQUIRES = [
     "prototorch_models",
     "pandas",
+    "matplotlib",
 ]
 
 ALL = INSTALL_REQUIRES
