@@ -45,6 +45,7 @@ class OneClassMixin():
         self.wtac = wtac_thresh
 
     def init_params(self, ):
+        pass
         self.lr_scheduler = ExponentialLR
         self.lr_scheduler_kwargs = dict(gamma=0.99, verbose=False)
 
@@ -57,7 +58,6 @@ class OneClassMixin():
             y,
             prototype_labels=plabels,
             theta_boundary=self._theta,
-            device=self.device,
         )
         return out, loss
 
@@ -130,29 +130,29 @@ class OneClassGMLVQ(OneClassMixin, GMLVQ):
 
 class OneClassLGMLVQ(OneClassMixin, LGMLVQ):
     def __init__(self, hparams, **kwargs):
-        distance_fn = kwargs.pop("distance_fn", lomega_distance)
-        x_train = kwargs.pop("theta_initializer")
-        super().__init__(hparams, distance_fn=distance_fn, **kwargs)
+        super().__init__(hparams, **kwargs)
+
+        train_ds = kwargs.pop("theta_initializer")
+
+        loss = kwargs.pop("loss", occ_csi_soft_loss2)
+        theta_trainable = kwargs.pop("theta_trainable", True)
 
         # Re-register `_omega` to override the one from the super class.
-        omega = torch.randn(
-            self.num_prototypes,
-            self.hparams.input_dim,
-            self.hparams.latent_dim,
-            device=self.device,
+        #omega = torch.randn(
+        #    self.num_prototypes,
+        #    self.hparams.input_dim,
+        #    self.hparams.latent_dim,
+        #    device=self.device,
+        #)
+        #self.register_parameter("_omega", Parameter(omega))
+
+        theta_init = ThetaInitializer(train_ds, self)
+        self.init_variant(
+            theta_init=theta_init,
+            loss=loss,
+            theta_trainable=theta_trainable,
         )
-        self.register_parameter("_omega", Parameter(omega))
-
-        theta_init = ThetaInitializer(x_train, self.compute_distances,
-                                      self.proto_layer, self.device)
-        self.init_variant(theta_init=theta_init)
         self.init_params()
-
-    """
-    def lambda_matrix(self):
-        lam = self._omega @ self._omega.T
-        return lam.detach().cpu()
-    """
 
     def predict_latent(self, x, map_protos=True):
         """Predict `x` assuming it is already embedded in the latent space.

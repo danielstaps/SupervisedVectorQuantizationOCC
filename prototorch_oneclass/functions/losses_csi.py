@@ -5,29 +5,33 @@ from .distributions import distribution_handler
 from .losses import _get_matcher, error_type_determination
 
 
-def occ_csi_soft_loss(distances,
-                      target_labels,
-                      prototype_labels,
-                      theta_boundary,
-                      device='cpu'):
+def occ_csi_soft_loss(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
-    # get probabilty from distribution
-    prob = distribution_handler(distances,
-                                theta_boundary,
-                                distribution='studentT')
-    #print("probs",prob)
+    prob = distribution_handler(
+        distances,
+        theta_boundary,
+        distribution='studentT',
+    )
 
     # filter FP, FN
-    TP, TN, FP, FN = error_type_determination(distances, theta_boundary,
-                                              target_labels, prototype_labels,
-                                              device)
+    TP, TN, FP, FN = error_type_determination(
+        distances,
+        theta_boundary,
+        target_labels,
+        prototype_labels,
+    )
 
     # calc loss
-    TPloss = (TP.to(device) * prob.to(device))
-    FPloss = (FP.to(device) * prob.to(device))
-    FNloss = 1 - (FN.to(device) * prob.to(device))
+    TPloss = (TP * prob)
+    FPloss = (FP * prob)
+    FNloss = 1 - (FN * prob)
     #print("conf",TPloss, FPloss, FNloss)
 
     TPloss = torch.where(TPloss <= torch.Tensor([[1e-4]]),
@@ -36,56 +40,57 @@ def occ_csi_soft_loss(distances,
     csi = (TPloss) / (FNloss + FPloss + TPloss)
     #print("csi",csi)
     csi_orig = (TP.sum()) / (FN.sum() + FP.sum() + TP.sum())
-    print("csi score:", csi_orig)
-    print("csi mean:", csi.mean().detach())
+    #print("csi score:", csi_orig)
+    #print("csi mean:", csi.mean().detach())
     loss = 1 / csi
 
     return loss.mean()
 
 
-def occ_csi_soft_loss2(distances,
-                       target_labels,
-                       prototype_labels,
-                       theta_boundary,
-                       device='cpu'):
-    print(theta_boundary)
+def occ_csi_soft_loss2(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
     # get probabilty from distribution
-    prob = distribution_handler(distances,
-                                theta_boundary,
-                                distribution='studentT',
-                                pass_probs=True)
-    #print("probs",prob)
+    prob = distribution_handler(
+        distances,
+        theta_boundary,
+        distribution='studentT',
+        pass_probs=True,
+    )
 
     # filter FP, FN
-    TP, TN, FP, FN = error_type_determination(distances,
-                                              theta_boundary,
-                                              target_labels,
-                                              prototype_labels,
-                                              device,
-                                              pass_errors=True)
+    TP, TN, FP, FN = error_type_determination(
+        distances,
+        theta_boundary,
+        target_labels,
+        prototype_labels,
+        pass_errors=True,
+    )
 
     # calc loss
-    TPloss = (TP.to(device) * prob.to(device))
-    FPloss = (FP.to(device) * prob.to(device))
-    FNloss = 1 - (FN.to(device) * prob.to(device))
+    TPloss = (TP * prob)
+    FPloss = (FP * prob)
+    FNloss = 1 - (FN * prob)
     #print("conf", TPloss.detach(), FPloss.detach(), FNloss.detach())
 
-    TPloss = torch.where(TPloss <= torch.Tensor([[1e-4]]),
-                         torch.tensor([[1e-4]]), TPloss)
+    TPloss = torch.clip(TPloss, min=1e-4)
 
     csi = (TPloss) / (FNloss + FPloss + TPloss)
 
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
-    local_loss = torch.zeros(size=(distances.shape[0], num_classes))
+    local_loss = torch.zeros(size=(distances.shape[0],
+                                   num_classes)).type_as(distances)
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
-        winning_indices = torch.min(selected_distances,
-                                    dim=1).indices.to(device)
+        winning_indices = torch.min(selected_distances, dim=1).indices
         local_loss[:, i] = csi[:, protoii].gather(
             1, winning_indices.unsqueeze(1)).squeeze()
 
@@ -99,11 +104,12 @@ def occ_csi_soft_loss2(distances,
     return loss.mean()
 
 
-def occ_brier_score(distances,
-                    target_labels,
-                    prototype_labels,
-                    theta_boundary,
-                    device='cpu'):
+def occ_brier_score(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
@@ -125,24 +131,28 @@ def occ_brier_score(distances,
     loss = (prob - c.float())**2
     print("brier score:", loss.mean())
     """
-    d_tilde = torch.subtract(distances.to(device), theta_boundary.to(device))
+    d_tilde = torch.subtract(distances, theta_boundary)
     is_out_of_bound = d_tilde >= 0
     print(confusion_matrix(target_labels.cpu().numpy(), is_out_of_bound.cpu().numpy()))
     """
     return loss.mean()
 
 
-def occ_brier_score2(distances,
-                     target_labels,
-                     prototype_labels,
-                     theta_boundary,
-                     device='cpu'):
+def occ_brier_score2(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
-    matcher = _get_matcher(target_labels, prototype_labels, device=device)
+    matcher = _get_matcher(
+        target_labels,
+        prototype_labels,
+    )
     not_matcher = torch.bitwise_not(matcher)
-    d_tilde = torch.subtract(distances.to(device), theta_boundary.to(device))
+    d_tilde = torch.subtract(distances, theta_boundary)
     is_in_bound = d_tilde < 0
     is_out_of_bound = d_tilde >= 0
     #TN = torch.logical_and(is_out_of_bound, not_matcher)
@@ -189,11 +199,12 @@ def occ_brier_score2(distances,
     return loss.mean()
 
 
-def occ_heidke_skill_score(distances,
-                           target_labels,
-                           prototype_labels,
-                           theta_boundary,
-                           device='cpu'):
+def occ_heidke_skill_score(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """

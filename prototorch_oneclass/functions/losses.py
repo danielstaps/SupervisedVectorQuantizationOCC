@@ -6,11 +6,14 @@ from .confusion import error_type_determination
 from .distributions import distribution_handler
 
 
-def _get_matcher(targets, labels, device='cpu'):
+def _get_matcher(
+    targets,
+    labels,
+):
     """Returns a boolean tensor."""
     #matcher = torch.eq(targets.unsqueeze(dim=1), labels)
     targets_resized = targets.unsqueeze(dim=1)
-    matcher = torch.eq(targets_resized.to(device), labels.to(device))
+    matcher = torch.eq(targets_resized, labels)
     if labels.ndim == 2:
         # if the labels are one-hot vectors
         num_classes = targets.size()[1]
@@ -76,14 +79,18 @@ def _test_one_class_classifier_triplet_loss(distances, target_labels,
     return loss
 
 
-def _get_dop_in_diopf(diff_to_thresh, matcher, not_matcher, device='cpu'):
-    zero = torch.tensor(0).type(torch.float).to(device)
+def _get_dop_in_diopf(
+    diff_to_thresh,
+    matcher,
+    not_matcher,
+):
+    zero = torch.tensor(0).type(torch.float)
     d_inner_pn = torch.where(diff_to_thresh < zero, diff_to_thresh, zero)
     d_inner_p = torch.where(matcher, d_inner_pn, zero)
     d_inner_n = torch.where(not_matcher, d_inner_pn, zero)
     d_outer_pn = torch.where(diff_to_thresh >= zero, diff_to_thresh, zero)
     d_outer_p = torch.where(matcher, d_outer_pn, zero)
-    _zeros = torch.full(d_outer_p.shape, 0).type(torch.float).to(device)
+    _zeros = torch.full(d_outer_p.shape, 0).type(torch.float)
     d_outer_p_free = torch.where(
         torch.min(d_inner_p, dim=1).values < zero, _zeros.T, d_outer_p.T).T
     d_op_in = torch.add(d_outer_p_free, d_inner_n)
@@ -134,19 +141,23 @@ def _backup_one_class_classifier_loss(distances, target_labels,
     return muf + mud
 
 
-def one_class_classifier_loss(distances,
-                              target_labels,
-                              prototype_labels,
-                              theta_boundary,
-                              device='cpu'):
+def one_class_classifier_loss(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """ OneClassClassifier loss function """
     if torch.cuda.is_available():
         device = 'cuda:0'
     else:
         device = 'cpu'
-    zero = torch.tensor(0).type(torch.float).to(device)
-    inf = torch.tensor(float('inf')).type(torch.float).to(device)
-    matcher = _get_matcher(target_labels, prototype_labels, device=device)
+    zero = torch.tensor(0).type(torch.float)
+    inf = torch.tensor(float('inf')).type(torch.float)
+    matcher = _get_matcher(
+        target_labels,
+        prototype_labels,
+    )
     not_matcher = torch.bitwise_not(matcher)
     """
     Heaviside -> RELU oder SIGMOID
@@ -157,11 +168,12 @@ def one_class_classifier_loss(distances,
     #winning_indices = torch.min(distances, dim=1).indices
     #diff_to_thresh = torch.subtract(distances[winning_indices], theta_boundary)
     diff_to_thresh = torch.subtract(distances, theta_boundary)
-    d_op_in, d_iopf = _get_dop_in_diopf(diff_to_thresh,
-                                        matcher,
-                                        not_matcher,
-                                        device=device)
-    minus = torch.tensor(-1).type(torch.float).to(device)
+    d_op_in, d_iopf = _get_dop_in_diopf(
+        diff_to_thresh,
+        matcher,
+        not_matcher,
+    )
+    minus = torch.tensor(-1).type(torch.float)
     muf = d_op_in * torch.pow(minus, not_matcher.type(torch.long))
     muf = torch.sum(muf, dim=-1, keepdims=True)
 
@@ -175,8 +187,8 @@ def one_class_classifier_loss(distances,
     dimins = torch.min(d_matching_inf, dim=-1, keepdims=True).values
     mud = torch.where(dsums != 0., dimins, dzmins)
 
-    alpha = torch.tensor(0.5).type(torch.float).to(device)
-    opalpha = torch.tensor(1 - alpha).type(torch.float).to(device)
+    alpha = torch.tensor(0.5).type(torch.float)
+    opalpha = torch.tensor(1 - alpha).type(torch.float)
 
     #mu = alpha * mud + opalpha * muf
     mu = muf
@@ -184,19 +196,23 @@ def one_class_classifier_loss(distances,
     return mu.mean()
 
 
-def occ_mitRonny(distances,
-                 target_labels,
-                 prototype_labels,
-                 theta_boundary,
-                 device='cpu'):
+def occ_mitRonny(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """ OneClassClassifier loss function """
 
     print("theta", theta_boundary)
     print(device)
 
-    zero = torch.tensor(0).type(torch.float).to(device)
-    inf = torch.tensor(float('inf')).type(torch.float).to(device)
-    matcher = _get_matcher(target_labels, prototype_labels, device=device)
+    zero = torch.tensor(0).type(torch.float)
+    inf = torch.tensor(float('inf')).type(torch.float)
+    matcher = _get_matcher(
+        target_labels,
+        prototype_labels,
+    )
     not_matcher = torch.bitwise_not(matcher)
 
     # Optimizing False Positives and Negatives
@@ -214,12 +230,12 @@ def occ_mitRonny(distances,
     not_matcher = not_matcher.gather(1, winning_indices.unsqueeze(1)).squeeze()
     #print(d_tilde)
     # d_tilde = torch.subtract(distances, theta_boundary)
-    minus = torch.tensor(-1).type(torch.float).to(device)
+    minus = torch.tensor(-1).type(torch.float)
     #muf = d_tilde * torch.pow(minus, not_matcher.type(torch.long))
     muf = d_tilde * ((-1)**not_matcher.type(torch.long))
     # RELU
     muf = torch.relu(muf)
-    #d_op_in, _ =_get_dop_in_diopf(d_tilde, matcher, not_matcher, device=device)
+    #d_op_in, _ =_get_dop_in_diopf(d_tilde, matcher, not_matcher, )
     # SIGMOID
     #muf = torch.sigmoid(muf)
     #print(muf, muf.shape)
@@ -242,11 +258,12 @@ def occ_mitRonny(distances,
     return mu.mean()
 
 
-def occ_studentT_loss(distances,
-                      target_labels,
-                      prototype_labels,
-                      theta_boundary,
-                      device='cpu'):
+def occ_studentT_loss(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
@@ -285,11 +302,12 @@ def occ_studentT_loss(distances,
     return loss
 
 
-def occ_studentT_loss_v2(distances,
-                         target_labels,
-                         prototype_labels,
-                         theta_boundary,
-                         device='cpu'):
+def occ_studentT_loss_v2(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
@@ -301,7 +319,10 @@ def occ_studentT_loss_v2(distances,
     # filter FP, FN
     FN, FP = error_type_determination(distances, theta_boundary, target_labels,
                                       prototype_labels, device)
-    P = _get_matcher(target_labels, prototype_labels, device=device)
+    P = _get_matcher(
+        target_labels,
+        prototype_labels,
+    )
     N = torch.bitwise_not(P)
 
     winning_indices = torch.min(distances,

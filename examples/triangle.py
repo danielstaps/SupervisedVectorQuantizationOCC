@@ -5,12 +5,13 @@ import prototorch as pt
 import pytorch_lightning as pl
 import torch
 # Prototorch One Class Classifier
-from prototorch_oneclass import OneClassGMLVQ
+from prototorch_oneclass import OneClassGMLVQ, OneClassLGMLVQ
 from prototorch_oneclass.datasets import Polygon
-from prototorch_oneclass.functions.losses_csi import occ_csi_soft_loss2
+from prototorch_oneclass.functions.losses_csi import (occ_csi_soft_loss,
+                                                      occ_csi_soft_loss2)
 
 # Configuration
-num_classes = 3
+num_classes = 4
 num_samples = 1000
 dimensions = 2
 thickness = 0.4
@@ -42,8 +43,8 @@ if __name__ == "__main__":
         distribution=(num_classes, prototypes_per_class),
         input_dim=2,
         latent_dim=2,
-        proto_lr=0.01,
-        bb_lr=0.01,
+        proto_lr=0.8,
+        bb_lr=0.8,
     )
 
     # Initialize the model
@@ -56,6 +57,8 @@ if __name__ == "__main__":
         theta_trainable=True,
     )
 
+    print(model._theta)
+
     # Callbacks
     vis = pt.models.VisGLVQ2D(train_ds, show_last_only=False, block=False)
 
@@ -66,6 +69,7 @@ if __name__ == "__main__":
             vis,
         ],
         detect_anomaly=True,
+        gpus=1,
     )
 
     # Training loop

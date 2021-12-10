@@ -5,12 +5,12 @@ import prototorch as pt
 import pytorch_lightning as pl
 import torch
 # Prototorch One Class Classifier
-from prototorch_oneclass import OneClassGMLVQ
+from prototorch_oneclass import OneClassGMLVQ, OneClassLGMLVQ
 from prototorch_oneclass.datasets import Flag
 from prototorch_oneclass.functions.losses_csi import occ_csi_soft_loss2
 
 # Configuration
-num_classes = 3
+num_classes = 2
 num_samples = 1000
 dimensions = 2
 thickness = 0.4
@@ -42,11 +42,11 @@ if __name__ == "__main__":
         input_dim=2,
         latent_dim=2,
         proto_lr=0.01,
-        bb_lr=0.01,
+        bb_lr=1.0,
     )
 
     # Initialize the model
-    model = OneClassGMLVQ(
+    model = OneClassLGMLVQ(
         hparams,
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SMCI(train_ds),
