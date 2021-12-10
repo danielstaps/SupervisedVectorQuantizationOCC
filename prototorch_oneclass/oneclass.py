@@ -14,10 +14,10 @@ from .functions.losses_csi import occ_csi_soft_loss2
 
 
 class ThetaInitializer():
-    def __init__(self, x_train, model, num_thetas=None):
+    def __init__(self, x_train, model):
         if type(x_train) == np.ndarray:
             x_train = torch.Tensor(x_train)
-        d = model.compute_distances(x_train)
+        d = model.compute_distances(x_train).detach().cpu()
         self.theta = torch.abs(torch.mean(d, axis=0))
 
 
@@ -31,7 +31,10 @@ class OneClassMixin():
         print("label_shape:", self.proto_layer.labels.shape)
         self.register_parameter(
             "_theta",
-            Parameter(theta_init.theta, requires_grad=theta_trainable),
+            Parameter(
+                theta_init.theta,
+                requires_grad=theta_trainable,
+            ),
         )
         self.loss = LambdaLayer(loss)
         self.wtac = wtac_thresh
@@ -44,11 +47,13 @@ class OneClassMixin():
         x, y = batch
         out = self.compute_distances(x)
         plabels = self.proto_layer.labels
-        loss = self.loss(out,
-                         y,
-                         prototype_labels=plabels,
-                         theta_boundary=self._theta,
-                         device=self.device)
+        loss = self.loss(
+            out,
+            y,
+            prototype_labels=plabels,
+            theta_boundary=self._theta,
+            device=self.device,
+        )
         return out, loss
 
     @property
@@ -57,7 +62,7 @@ class OneClassMixin():
 
     def predict_from_distances(self, distances):
         with torch.no_grad():
-            plabels = self.proto_layer.labels
+            _, plabels = self.proto_layer()
             y_pred = self.wtac(distances, plabels, self._theta)
         return y_pred
 
@@ -79,21 +84,22 @@ class OneClassGLVQ(OneClassMixin, GLVQ):
 
 class OneClassGMLVQ(OneClassMixin, GMLVQ):
     def __init__(self, hparams, **kwargs):
-        distance_fn = kwargs.pop("distance_fn", omega_distance)
+        super().__init__(hparams, **kwargs)
+
         x_train = kwargs.pop("theta_initializer")
 
         loss = kwargs.pop("loss", occ_csi_soft_loss2)
         theta_trainable = kwargs.pop("theta_trainable", True)
 
-        super().__init__(hparams, distance_fn=distance_fn, **kwargs)
-
         if x_train is None:
             raise NotImplementedError("No default theta initializer")
 
         theta_init = ThetaInitializer(x_train, self)
-        self.init_variant(theta_init=theta_init,
-                          loss=loss,
-                          theta_trainable=theta_trainable)
+        self.init_variant(
+            theta_init=theta_init,
+            loss=loss,
+            theta_trainable=theta_trainable,
+        )
         self.init_params()
 
     def lambda_matrix(self):
