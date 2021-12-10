@@ -8,6 +8,7 @@ with open("README.md", "r") as fh:
 
 INSTALL_REQUIRES = [
     "prototorch_models",
+    "pandas",
 ]
 
 ALL = INSTALL_REQUIRES

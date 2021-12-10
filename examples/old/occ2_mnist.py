@@ -2,19 +2,19 @@
 
 import argparse
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import prototorch as pt
 import pytorch_lightning as pl
 import torch
-from img_preproc import give_data_back
-#from proto.datasets.flag import Flag
-from proto.oneclass import OneClassGLVQ, OneClassGMLVQ, OneClassLGMLVQ
 from prototorch.datasets import NumpyDataset
+from prototorch_oneclass.oneclass import (OneClassGLVQ, OneClassGMLVQ,
+                                          OneClassLGMLVQ)
 from sklearn.datasets import load_digits
 from sklearn.metrics import confusion_matrix
 from torchvision.datasets import MNIST
+
+from img_preproc import give_data_back
 
 CUDA = True
 

@@ -4,9 +4,17 @@ import argparse
 import prototorch as pt
 import pytorch_lightning as pl
 import torch
-from proto.datasets.triangle import Triangle
-from proto.functions.losses_csi import occ_csi_soft_loss2
-from proto.oneclass import OneClassGMLVQ
+# Prototorch One Class Classifier
+from prototorch_oneclass import OneClassGMLVQ
+from prototorch_oneclass.datasets import Polygon
+from prototorch_oneclass.functions.losses_csi import occ_csi_soft_loss2
+
+# Configuration
+num_classes = 3
+num_samples = 1000
+dimensions = 2
+thickness = 0.4
+prototypes_per_class = 1
 
 if __name__ == "__main__":
     # Command-line arguments
@@ -15,9 +23,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Dataset
-    num_classes = 2
-
-    train_ds = Triangle(num_samples=1000, dimensions=2, num_classes=1)
+    train_ds = Polygon(
+        num_samples=num_samples,
+        dimensions=dimensions,
+        num_classes=num_classes,
+        thickness=thickness,
+    )
 
     # Dataloaders
     train_loader = torch.utils.data.DataLoader(
@@ -26,7 +37,7 @@ if __name__ == "__main__":
         batch_size=train_ds.data.shape[0],
     )
 
-    prototypes_per_class = 1
+    # Hyperparameters
     hparams = dict(
         distribution=(num_classes, prototypes_per_class),
         input_dim=2,

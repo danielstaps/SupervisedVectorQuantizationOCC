@@ -38,7 +38,7 @@ def prepare_quad(data, feature):
 
 def make_quad(feature=None):
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    data = pd.read_csv(f"{dir_path}/data_roh/noise_mixture_data.csv")
+    data = pd.read_csv(f"{dir_path}/raw/quad.csv")
     x, y = prepare_quad(data, feature)
 
     print(x.shape, y.shape)
