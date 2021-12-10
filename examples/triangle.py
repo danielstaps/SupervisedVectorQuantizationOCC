@@ -51,7 +51,7 @@ if __name__ == "__main__":
         hparams,
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SMCI(train_ds),
-        theta_initializer=train_ds.data[train_ds.target == 0],
+        theta_initializer=train_ds,
         loss=occ_csi_soft_loss2,
         theta_trainable=True,
     )

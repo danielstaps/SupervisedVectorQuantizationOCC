@@ -14,11 +14,16 @@ from .functions.losses_csi import occ_csi_soft_loss2
 
 
 class ThetaInitializer():
-    def __init__(self, x_train, model):
-        if type(x_train) == np.ndarray:
-            x_train = torch.Tensor(x_train)
+    def __init__(self, train_ds, model):
+        x_train, y_train = train_ds.data, train_ds.target
         d = model.compute_distances(x_train).detach().cpu()
-        self.theta = torch.abs(torch.mean(d, axis=0))
+
+        _, plabels = model.proto_layer()
+
+        self.theta = torch.zeros(len(plabels))
+
+        for i, label in enumerate(plabels):
+            self.theta[i] = torch.mean(d[y_train == label, i])
 
 
 class OneClassMixin():
@@ -46,7 +51,7 @@ class OneClassMixin():
     def shared_step(self, batch, batch_idx, optimizer_idx=None):
         x, y = batch
         out = self.compute_distances(x)
-        plabels = self.proto_layer.labels
+        _, plabels = self.proto_layer()
         loss = self.loss(
             out,
             y,
@@ -70,14 +75,14 @@ class OneClassMixin():
 class OneClassGLVQ(OneClassMixin, GLVQ):
     def __init__(self, hparams, **kwargs):
         distance_fn = kwargs.get("distance_fn", squared_euclidean_distance)
-        x_train = kwargs.get("theta_initializer", None)
+        train_ds = kwargs.get("theta_initializer", None)
 
         super().__init__(hparams, distance_fn=distance_fn, **kwargs)
 
-        if x_train is None:
+        if train_ds is None:
             raise NotImplementedError("No default theta initializer")
 
-        theta_init = ThetaInitializer(x_train, self)
+        theta_init = ThetaInitializer(train_ds, self)
         self.init_variant(theta_init=theta_init)
         self.init_params()
 
@@ -86,15 +91,15 @@ class OneClassGMLVQ(OneClassMixin, GMLVQ):
     def __init__(self, hparams, **kwargs):
         super().__init__(hparams, **kwargs)
 
-        x_train = kwargs.pop("theta_initializer")
+        train_ds = kwargs.pop("theta_initializer")
 
         loss = kwargs.pop("loss", occ_csi_soft_loss2)
         theta_trainable = kwargs.pop("theta_trainable", True)
 
-        if x_train is None:
+        if train_ds is None:
             raise NotImplementedError("No default theta initializer")
 
-        theta_init = ThetaInitializer(x_train, self)
+        theta_init = ThetaInitializer(train_ds, self)
         self.init_variant(
             theta_init=theta_init,
             loss=loss,
