@@ -7,8 +7,9 @@ import torch
 # Prototorch One Class Classifier
 from prototorch_oneclass import OneClassGMLVQ, OneClassLGMLVQ
 from prototorch_oneclass.datasets import Polygon
-from prototorch_oneclass.functions.losses_csi import (occ_csi_soft_loss,
-                                                      occ_csi_soft_loss2)
+from prototorch_oneclass.functions.losses import (occ_brier_score2,
+                                                  occ_csi_soft_loss,
+                                                  occ_csi_soft_loss2)
 
 # Configuration
 num_classes = 4
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SMCI(train_ds),
         theta_initializer=train_ds,
-        loss=occ_csi_soft_loss2,
+        loss=occ_brier_score2,
         theta_trainable=True,
     )
 

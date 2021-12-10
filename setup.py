@@ -11,7 +11,12 @@ INSTALL_REQUIRES = [
     "pandas",
 ]
 
-ALL = INSTALL_REQUIRES
+DATASETS = [
+    "tensorflow-datasets",
+    "tensorflow",
+]
+
+ALL = INSTALL_REQUIRES + DATASETS
 
 setup(
     name="prototorch_oneclass",
@@ -25,6 +30,10 @@ setup(
     download_url=DOWNLOAD_URL,
     python_requires=">=3.6",
     install_requires=INSTALL_REQUIRES,
+    extras_require={
+        "datasets": DATASETS,
+        "all": ALL,
+    },
     packages=find_packages(),
     classifiers=[
         "Environment :: Console",
