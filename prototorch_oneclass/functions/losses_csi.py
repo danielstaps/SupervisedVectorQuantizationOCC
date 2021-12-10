@@ -88,8 +88,8 @@ def occ_csi_soft_loss2(distances,
     csi = local_loss
     #print("csi",csi)
     csi_orig = (TP.sum()) / (FN.sum() + FP.sum() + TP.sum())
-    print("csi score:", csi_orig)
-    print("csi mean:", csi.mean().detach())
+    #print("csi score:", csi_orig)
+    #print("csi mean:", csi.mean().detach())
     loss = 1 / csi
 
     return loss.mean()
