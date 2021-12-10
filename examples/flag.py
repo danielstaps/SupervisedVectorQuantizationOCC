@@ -7,7 +7,7 @@ import torch
 # Prototorch One Class Classifier
 from prototorch_oneclass import OneClassGMLVQ, OneClassLGMLVQ
 from prototorch_oneclass.datasets import Flag
-from prototorch_oneclass.functions.losses_csi import occ_csi_soft_loss2
+from prototorch_oneclass.functions.losses import occ_csi_soft_loss2
 
 # Configuration
 num_classes = 2

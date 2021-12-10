@@ -10,7 +10,7 @@ from torch.nn.parameter import Parameter
 from torch.optim.lr_scheduler import ExponentialLR
 
 from .functions.competitions import wtac_thresh
-from .functions.losses_csi import occ_csi_soft_loss2
+from .functions.losses import occ_csi_soft_loss2
 
 
 class ThetaInitializer():
