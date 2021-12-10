@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 import torch
 # Prototorch One Class Classifier
 from prototorch_oneclass import OneClassGMLVQ
-from prototorch_oneclass.datasets import Polygon
+from prototorch_oneclass.datasets import Flag
 from prototorch_oneclass.functions.losses_csi import occ_csi_soft_loss2
 
 # Configuration
@@ -23,11 +23,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Dataset
-    train_ds = Polygon(
+    train_ds = Flag(
         num_samples=num_samples,
         dimensions=dimensions,
         num_classes=num_classes,
-        thickness=thickness,
     )
 
     # Dataloaders
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassLGMLVQ(
+    model = OneClassGMLVQ(
         hparams,
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SMCI(train_ds),

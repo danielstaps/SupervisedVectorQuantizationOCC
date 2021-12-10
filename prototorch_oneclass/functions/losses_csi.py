@@ -48,6 +48,7 @@ def occ_csi_soft_loss2(distances,
                        prototype_labels,
                        theta_boundary,
                        device='cpu'):
+    print(theta_boundary)
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
@@ -72,7 +73,10 @@ def occ_csi_soft_loss2(distances,
     FNloss = 1 - (FN.to(device) * prob.to(device))
     #print("conf", TPloss.detach(), FPloss.detach(), FNloss.detach())
 
-    csi = (TPloss + 10e-2) / (FNloss + FPloss + TPloss)
+    TPloss = torch.where(TPloss <= torch.Tensor([[1e-4]]),
+                         torch.tensor([[1e-4]]), TPloss)
+
+    csi = (TPloss) / (FNloss + FPloss + TPloss)
 
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
