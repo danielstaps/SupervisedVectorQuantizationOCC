@@ -4,12 +4,10 @@ import argparse
 import prototorch as pt
 import pytorch_lightning as pl
 import torch
+from prototorch_oneclass import OneClassGMLVQ
 # Prototorch One Class Classifier
-from prototorch_oneclass import OneClassGMLVQ, OneClassLGMLVQ
 from prototorch_oneclass.datasets import Polygon
-from prototorch_oneclass.functions.losses import (occ_brier_score2,
-                                                  occ_csi_soft_loss,
-                                                  occ_csi_soft_loss2)
+from prototorch_oneclass.functions.losses import csi_soft_loss
 
 # Configuration
 num_classes = 4
@@ -49,13 +47,14 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassLGMLVQ(
+    model = OneClassGMLVQ(
         hparams,
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SMCI(train_ds),
         theta_initializer=train_ds,
-        loss=occ_brier_score2,
+        loss=csi_soft_loss,
         theta_trainable=True,
+        p_distribution="gauss",
     )
 
     print(model._theta)

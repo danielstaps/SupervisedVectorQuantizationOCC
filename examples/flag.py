@@ -5,9 +5,9 @@ import prototorch as pt
 import pytorch_lightning as pl
 import torch
 # Prototorch One Class Classifier
-from prototorch_oneclass import OneClassGMLVQ, OneClassLGMLVQ
+from prototorch_oneclass import OneClassLGMLVQ
 from prototorch_oneclass.datasets import Flag
-from prototorch_oneclass.functions.losses import occ_csi_soft_loss2
+from prototorch_oneclass.functions.losses import csi_soft_loss
 
 # Configuration
 num_classes = 2
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SMCI(train_ds),
         theta_initializer=train_ds,
-        loss=occ_csi_soft_loss2,
+        loss=csi_soft_loss,
         theta_trainable=True,
     )
 

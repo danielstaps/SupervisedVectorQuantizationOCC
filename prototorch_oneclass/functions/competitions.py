@@ -3,21 +3,35 @@
 import torch
 
 
-def wtac_thresh(distances: torch.Tensor, labels: torch.LongTensor,
-                theta_boundary: torch.Tensor) -> (torch.LongTensor):
+def wtac_thresh(
+    distances: torch.Tensor,
+    labels: torch.Tensor,
+    theta_boundary: torch.Tensor,
+) -> torch.Tensor:
     """ Used for OneClassClassifier.
     Calculates if distance is in between the Voronoi-cell of prototype or not. Voronoi-cell is defined by >theta_boundary<. (like a radius) """
-    #in_boundary = (theta_boundary - distances)
-    #winning_indices = torch.min(in_boundary, dim=1).indices
-    distances = distances
-    theta_boundary = theta_boundary
     winning_indices = torch.min(distances, dim=1).indices
-    labels = labels
     winning_labels = labels[winning_indices].squeeze()
+
     in_boundary = (theta_boundary - distances)
     in_boundary = in_boundary.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    zero = torch.tensor(0.).type(torch.float)
-    winning_labels = torch.where(in_boundary > zero, winning_labels,
-                                 torch.max(labels) +
-                                 1)  # '-1' -> 'garbage class'
+
+    winning_labels = torch.where(
+        in_boundary > 0.0,
+        winning_labels,
+        torch.max(labels) + 1,
+    )
+
     return winning_labels
+
+
+class WTAC_Thresh(torch.nn.Module):
+    """Winner-Takes-All-Competition Layer.
+    Thin wrapper over the `wtac` function.
+    """
+    def __init__(self, theta_boundary):
+        super().__init__()
+        self.theta_boundary = theta_boundary
+
+    def forward(self, distances, labels):  # pylint: disable=no-self-use
+        return wtac_thresh(distances, labels, self.theta_boundary)

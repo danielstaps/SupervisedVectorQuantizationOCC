@@ -5,7 +5,7 @@ import argparse
 import prototorch as pt
 import pytorch_lightning as pl
 import torch
-from prototorch_oneclass.functions.losses import occ_csi_soft_loss2
+from prototorch_oneclass.functions.losses import csi_soft_loss
 from prototorch_oneclass.oneclass import OneClassGMLVQ
 from sklearn.metrics import confusion_matrix
 from torchvision import transforms
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SSCI(train_loader),
         theta_initializer=train_ds.data[train_ds.targets == 0],
-        loss=occ_csi_soft_loss2,
+        loss=csi_soft_loss,
         theta_trainable=True,
     )
 

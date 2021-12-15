@@ -1,49 +1,24 @@
 import torch
+from prototorch.core import _get_matcher
 
 
-def _get_matcher(targets, labels):
-    """Returns a boolean tensor."""
-    #matcher = torch.eq(targets.unsqueeze(dim=1), labels)
-    targets_resized = targets.unsqueeze(dim=1)
-    matcher = torch.eq(targets_resized, labels)
-    if labels.ndim == 2:
-        # if the labels are one-hot vectors
-        num_classes = targets.size()[1]
-        matcher = torch.eq(torch.sum(matcher, dim=-1), num_classes)
-    return matcher
-
-
-def error_type_determination(distances,
-                             theta_boundary,
-                             target_labels,
-                             prototype_labels,
-                             pass_errors=False):
+def error_type_determination(
+    distances,
+    target_labels,
+    prototype_labels,
+    theta_boundary,
+):
     matcher = _get_matcher(target_labels, prototype_labels)
     not_matcher = torch.bitwise_not(matcher)
 
-    d_tilde = torch.subtract(distances, theta_boundary)
-    #print("d_tilde",d_tilde[:10])
-    #print("matcher",matcher[:10])
+    d_tilde = distances - theta_boundary
 
     is_in_bound = d_tilde < 0
     is_out_of_bound = d_tilde >= 0
 
-    TP = torch.logical_and(is_in_bound, matcher)
-    FN = torch.logical_and(is_out_of_bound, matcher)
-    TN = torch.logical_and(is_out_of_bound, not_matcher)
-    FP = torch.logical_and(is_in_bound, not_matcher)
-    if pass_errors:
-        return TP, TN, FP, FN
+    tp = torch.logical_and(is_in_bound, matcher)
+    fn = torch.logical_and(is_out_of_bound, matcher)
+    tn = torch.logical_and(is_out_of_bound, not_matcher)
+    fp = torch.logical_and(is_in_bound, not_matcher)
 
-    #fF = torch.add(case1, case2)
-    #fF = fF.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    #print("fF",fF)
-
-    winning_indices = torch.min(distances,
-                                dim=1).indices  # list of winning prototypes
-    TP = TP.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    TN = TN.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    FP = FP.gather(1, winning_indices.unsqueeze(1)).squeeze()
-    FN = FN.gather(1, winning_indices.unsqueeze(1)).squeeze()
-
-    return TP, TN, FP, FN
+    return tp, tn, fp, fn
