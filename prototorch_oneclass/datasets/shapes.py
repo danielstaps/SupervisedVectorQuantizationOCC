@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.datasets import make_blobs, make_circles, make_moons
@@ -9,7 +8,7 @@ np.random.seed(42)
 def create_shapes(num_samples=300,
                   num_shapes=1,
                   num_classes=1,
-                  outliers=0.1,
+                  outliers=0.0,
                   **kwargs):
 
     keys = ['centers', 'cluster_std', 'random_state', 'noise', 'factor']
@@ -19,8 +18,8 @@ def create_shapes(num_samples=300,
         if key not in kwargs.keys() and key == 'factor':
             kwargs[key] = 0.8
 
-    #outlier = int(outliers*num_samples)
-    #num_samples = num_samples - outlier
+    outlier = int(outliers * num_samples)
+    num_samples = num_samples - outlier
 
     types = {
         'blobs':
@@ -56,11 +55,12 @@ def create_shapes(num_samples=300,
 
 
 class Shapes(torch.utils.data.TensorDataset):
+
     def __init__(self,
                  num_samples: int = 300,
                  num_shapes: int = 1,
                  num_classes: int = 1,
-                 outliers=0.1,
+                 outliers=0.0,
                  **kwargs):
         x, y = create_shapes(num_samples, num_shapes, num_classes, outliers,
                              **kwargs)
