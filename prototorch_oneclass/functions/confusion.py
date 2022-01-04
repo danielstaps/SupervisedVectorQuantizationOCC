@@ -1,5 +1,14 @@
 import torch
-from prototorch.core import _get_matcher
+
+
+def _get_matcher(targets, labels):
+    """Returns a boolean tensor."""
+    matcher = torch.eq(targets.unsqueeze(dim=1), labels)
+    if labels.ndim == 2:
+        # if the labels are one-hot vectors
+        num_classes = targets.size()[1]
+        matcher = torch.eq(torch.sum(matcher, dim=-1), num_classes)
+    return matcher
 
 
 def error_type_determination(
