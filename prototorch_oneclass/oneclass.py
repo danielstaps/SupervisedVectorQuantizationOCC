@@ -18,9 +18,10 @@ def get_theta(train_ds, model):
     _, plabels = model.proto_layer()
 
     theta = torch.zeros(len(plabels))
+    quantile = 0.33
 
     for i, label in enumerate(plabels):
-        theta[i] = torch.mean(d[y_train == label, i])
+        theta[i] = torch.quantile(d[y_train == label, i], quantile)
 
     return theta
 
