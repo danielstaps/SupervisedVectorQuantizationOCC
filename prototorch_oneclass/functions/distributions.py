@@ -3,6 +3,13 @@ import math
 import torch
 
 
+def sigmoid(d_tilde, sigma=0.5):
+    """
+    implementation of sigmoid
+    """
+    return 1 / 1 + torch.exp(-d_tilde / sigma)
+
+
 def studentT_fct(squared_distances, theta_boundary):
     """
     Student-t distribution for a single degree of freedom
