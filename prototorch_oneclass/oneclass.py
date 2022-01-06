@@ -21,7 +21,8 @@ def get_theta(train_ds, model):
     quantile = 0.33
 
     for i, label in enumerate(plabels):
-        theta[i] = torch.quantile(d[y_train == label, i], quantile)
+        idx = torch.argmin(d[y_train == label], dim=1) == i
+        theta[i] = torch.quantile(d[y_train == label, i][idx], quantile)
 
     return theta
 
