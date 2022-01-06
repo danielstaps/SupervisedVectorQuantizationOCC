@@ -1,7 +1,7 @@
 import torch
 
-from .confusion import error_type_determination
-from .distributions import get_probabilities
+from .confusion import boundary_distance, error_type_determination
+from .distributions import get_probabilities, sigmoid
 
 
 def csi_soft_loss(
@@ -10,6 +10,7 @@ def csi_soft_loss(
     prototype_labels,
     theta_boundary,
     distribution=None,
+    sigma=0.1,
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
@@ -31,9 +32,13 @@ def csi_soft_loss(
         theta_boundary,
     )
 
-    tpLoss = (tp * prob)
-    fpLoss = (fp * prob)
-    fnLoss = 1 - (fn * prob)
+    d_tilde = boundary_distance(distances, theta_boundary)
+
+    trick17 = prob * sigmoid(d_tilde, sigma)
+
+    tpLoss = tp * trick17
+    fpLoss = fp * trick17
+    fnLoss = 1 - (fn * trick17)
 
     tpLoss = torch.clip(tpLoss, min=1e-4)
 

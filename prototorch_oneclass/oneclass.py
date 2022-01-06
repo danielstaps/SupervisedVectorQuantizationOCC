@@ -49,13 +49,20 @@ class OneClassInitialization:
             ),
         )
 
+        self.register_parameter(
+            "_sigma",
+            Parameter(
+                torch.Tensor([1.]),
+                requires_grad=False,
+            ),
+        )
+
         # Layers
         self.loss = LambdaLayer(
-            partial(
-                loss,
-                theta_boundary=self._theta,
-                distribution=self.p_distribution,
-            ),
+            partial(loss,
+                    theta_boundary=self._theta,
+                    distribution=self.p_distribution,
+                    sigma=self._sigma),
             name=loss.__name__,
         )
         self.competition_layer = WTAC_Thresh(theta_boundary=self._theta)

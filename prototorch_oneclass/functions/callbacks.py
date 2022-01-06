@@ -1,4 +1,5 @@
 from pytorch_lightning.callbacks import Callback
+from torch import Tensor
 
 
 class ThetaCallback(Callback):
@@ -17,3 +18,11 @@ class ThetaCallback(Callback):
             print(
                 f"Attention! Theta Minimum was to low! Theta={min(actual_theta)} Please consider increasing LATENT_DIM or decreasing PROTOTYPES Parameters."
             )
+
+
+class SigmaCallback(Callback):
+    def on_train_epoch_end(self, trainer, pl_module) -> None:
+        max_epochs = trainer.max_epochs
+        state_dict = pl_module.state_dict()
+        state_dict['_sigma'] -= Tensor([0.9 / max_epochs])
+        pl_module.load_state_dict(state_dict)
