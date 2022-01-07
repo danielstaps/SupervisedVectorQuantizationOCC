@@ -7,6 +7,8 @@ import torch
 # Prototorch One Class Classifier
 from prototorch_oneclass import OneClassLGMLVQ
 from prototorch_oneclass.datasets import Flag
+from prototorch_oneclass.functions.callbacks import (SigmaCallback,
+                                                     ThetaCallback)
 from prototorch_oneclass.functions.losses import csi_soft_loss
 
 # Configuration
@@ -63,6 +65,8 @@ if __name__ == "__main__":
         args,
         callbacks=[
             vis,
+            ThetaCallback(),
+            SigmaCallback(),
         ],
         detect_anomaly=True,
     )
