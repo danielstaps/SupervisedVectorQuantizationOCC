@@ -1,10 +1,6 @@
 import torch
 
 
-def boundary_distance(distances, theta_boundary):
-    return distances - theta_boundary
-
-
 def _get_matcher(targets, labels):
     """Returns a boolean tensor."""
     matcher = torch.eq(targets.unsqueeze(dim=1), labels)

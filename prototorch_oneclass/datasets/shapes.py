@@ -46,11 +46,11 @@ def create_shapes(num_samples=300,
 
     dataset, targets = [], []
     # TODO: extend for multiple shapes per class
-    for i in range(num_classes):
-        for j in range(num_shapes):
-            dataset.append(types[kwargs['kind']])
+    for j in range(num_shapes):
+        dataset.append(types[kwargs['kind']])
 
     datasets, targets = zip(*dataset)
+    datasets = np.asarray(datasets)
     targets = np.where(targets[0] <= num_classes, targets[0], num_classes)
     return datasets, targets
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     kind = 'blobs'
     num_samples = 1000
     num_shapes = 1
-    num_classes = 1
+    num_classes = 2
     outliers = 0.1
     center = [[-0.1, 0.15], [0.1, 0.1], [-0.3, 0.1]]
     cluster_std = [0.08, 0.05, 0.02]
