@@ -32,6 +32,7 @@ class OneClassInitialization:
         # Collect ARguments
         loss = kwargs.pop("loss", csi_soft_loss)
         self.p_distribution = kwargs.pop("p_distribution", None)
+        self.score = kwargs.pop("score", None)
         theta_trainable = kwargs.pop("theta_trainable", True)
 
         train_ds = kwargs.pop("theta_initializer")
@@ -40,12 +41,21 @@ class OneClassInitialization:
 
         # Initialize Theta
         theta = get_theta(train_ds, self)
+        gamma = get_theta(train_ds, self)
 
         self.register_parameter(
             "_theta",
             Parameter(
                 theta,
                 requires_grad=theta_trainable,
+            ),
+        )
+
+        self.register_parameter(
+            "_gamma",
+            Parameter(
+                gamma,
+                requires_grad=True,
             ),
         )
 
@@ -62,6 +72,8 @@ class OneClassInitialization:
             partial(loss,
                     theta_boundary=self._theta,
                     distribution=self.p_distribution,
+                    score=self.score,
+                    gamma=self._gamma,
                     sigma=self._sigma),
             name=loss.__name__,
         )

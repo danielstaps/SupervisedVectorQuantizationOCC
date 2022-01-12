@@ -1,7 +1,7 @@
 import torch
 from prototorch.core.losses import NeuralGasEnergy
 
-from .confusion import error_type_determination
+from .confusion import error_type_determination, get_scores
 from .distributions import get_probabilities, sigmoid
 
 
@@ -72,6 +72,8 @@ def lpcsi_loss(
     prototype_labels,
     theta_boundary,
     distribution=None,
+    score=None,
+    gamma=0.1,
     sigma=0.1,
 ):
     """
@@ -81,52 +83,69 @@ def lpcsi_loss(
     if distribution is None:
         distribution = 'studentT'
 
-    prob = get_probabilities(
-        distances,
-        theta_boundary,
-        distribution=distribution,
-    )
+    if score is None:
+        score = 'csi_score'
 
-    heavy_in_side = sigmoid(theta_boundary - distances, sigma)
-    heavy_out_side = sigmoid(distances - theta_boundary, sigma)
+    #prob = get_probabilities(
+    #    distances,
+    #    gamma,
+    #    distribution=distribution,
+    #)
+
+    prob = torch.where(distances < theta_boundary, 1, 0)
+
+    heavyside = sigmoid(theta_boundary - distances, sigma)
 
     kronecker_delta_plus = torch.where(target_labels == 0, 1, 0)
-    kronecker_delta_minus = torch.logical_not(kronecker_delta_plus)
+    if len(kronecker_delta_plus.shape) < 2:
+        kronecker_delta_plus = torch.unsqueeze(kronecker_delta_plus, 1)
 
-    tpLoss = kronecker_delta_plus * prob * heavy_in_side
-    fpLoss = kronecker_delta_minus * prob * heavy_in_side
-    fnLoss = kronecker_delta_plus * (1 - prob) * heavy_out_side
-    #fnLoss = kronecker_delta_plus * (1 - prob) * heavy_in_side
+    tpLoss = kronecker_delta_plus * heavyside * prob
+    tnLoss = (1 - kronecker_delta_plus) * (1 - heavyside * prob)
+    fpLoss = (1 - kronecker_delta_plus) * heavyside * prob
+    fnLoss = kronecker_delta_plus * (1 - heavyside * prob)
 
-    tpLoss = torch.sum(tpLoss, dim=1)
-    fpLoss = torch.sum(fpLoss, dim=1)
-    fnLoss = torch.sum(fnLoss, dim=1)
-    #tpLoss = torch.clip(tpLoss, min=1e-4)
+    tpLoss = torch.clip(tpLoss, min=1e-4)
 
-    csi = (tpLoss) / (fnLoss + fpLoss + tpLoss)
-    """
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
-    local_loss = torch.zeros(size=(distances.shape[0],
-                                   num_classes)).type_as(distances)
+
+    tp_local = torch.zeros(size=(distances.shape[0],
+                                 num_classes)).type_as(distances)
+    tn_local = torch.zeros(size=(distances.shape[0],
+                                 num_classes)).type_as(distances)
+    fp_local = torch.zeros(size=(distances.shape[0],
+                                 num_classes)).type_as(distances)
+    fn_local = torch.zeros(size=(distances.shape[0],
+                                 num_classes)).type_as(distances)
+
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
         winning_indices = torch.min(selected_distances, dim=1).indices
-        local_loss[:, i] = csi[:, protoii].gather(
+        tp_local[:, i] = tpLoss[:, protoii].gather(
             1,
             winning_indices.unsqueeze(1),
         ).squeeze()
-    """
+        tn_local[:, i] = tnLoss[:, protoii].gather(
+            1,
+            winning_indices.unsqueeze(1),
+        ).squeeze()
+        fp_local[:, i] = fpLoss[:, protoii].gather(
+            1,
+            winning_indices.unsqueeze(1),
+        ).squeeze()
+        fn_local[:, i] = fnLoss[:, protoii].gather(
+            1,
+            winning_indices.unsqueeze(1),
+        ).squeeze()
 
-    #csi = local_loss
-    classification_loss = 1 / csi
+    scores = get_scores(score, tp_local, tn_local, fp_local, fn_local)
 
+    classification_loss = scores
     representation_loss, _ = NeuralGasEnergy(lm=1)(distances)
 
-    #return loss.mean()
     alpha = 0.5
-
     return alpha * classification_loss.mean() + (
         1 - alpha) * representation_loss.mean()
 

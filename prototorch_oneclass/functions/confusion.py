@@ -31,3 +31,35 @@ def error_type_determination(
     fp = torch.logical_and(is_in_bound, not_matcher)
 
     return tp, tn, fp, fn
+
+
+def csi_score(tpLoss, tnLoss, fpLoss, fnLoss):
+    csi = (tpLoss) / (fnLoss + fpLoss + tpLoss)
+    return csi
+
+
+def mod_csi_score(tpLoss, tnLoss, fpLoss, fnLoss):
+    csi = (tpLoss + tnLoss) / (fnLoss + fpLoss + tpLoss)
+    return csi
+
+
+def accuracy_score(tpLoss, tnLoss, fpLoss, fnLoss):
+    accuracy = (tpLoss + tnLoss) / (tpLoss + tnLoss + fpLoss + fnLoss)
+    return accuracy
+
+
+SCORES = {
+    "csi": csi_score,
+    "mod_csi": mod_csi_score,
+    "accuracy": accuracy_score,
+}
+
+
+def get_scores(score, tpLoss, tnLoss, fpLoss, fnLoss):
+
+    if score not in SCORES:
+        raise ValueError(
+            f"Unknown distribution {score} for distribution_handler, choose from {list(SCORES.keys())}"
+        )
+
+    return SCORES[score](tpLoss, tnLoss, fpLoss, fnLoss)
