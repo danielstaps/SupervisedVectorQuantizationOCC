@@ -7,6 +7,7 @@ def sigmoid(boundary_distance, sigma=0.1):
     """
     implementation of sigmoid
     """
+    #sigma = 0.1
     return 1 / (1 + torch.exp(-boundary_distance / sigma))
 
 

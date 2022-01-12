@@ -1,5 +1,5 @@
 from pytorch_lightning.callbacks import Callback
-from torch import Tensor
+from torch import Tensor, exp
 
 
 class ThetaCallback(Callback):
@@ -21,8 +21,14 @@ class ThetaCallback(Callback):
 
 
 class SigmaCallback(Callback):
+    def __init__(self, ):
+        self.e = 0
+
     def on_train_epoch_end(self, trainer, pl_module) -> None:
+        self.e += 1
         max_epochs = trainer.max_epochs
         state_dict = pl_module.state_dict()
         state_dict['_sigma'] -= Tensor([0.99 / max_epochs])
+        #state_dict['_sigma'] *= 0.9991
+        #state_dict['_sigma'] -= exp(Tensor([-self.e / 100]))
         pl_module.load_state_dict(state_dict)

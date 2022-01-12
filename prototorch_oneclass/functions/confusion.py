@@ -38,9 +38,15 @@ def csi_score(tpLoss, tnLoss, fpLoss, fnLoss):
     return csi
 
 
-def mod_csi_score(tpLoss, tnLoss, fpLoss, fnLoss):
-    csi = (tpLoss + tnLoss) / (fnLoss + fpLoss + tpLoss)
-    return csi
+def ppcr_score(tpLoss, tnLoss, fpLoss, fnLoss):
+    #ppcr = (tpLoss + fpLoss) / (tpLoss + fpLoss + tnLoss + fnLoss)
+    ppcr = tpLoss - fpLoss
+    return ppcr
+
+
+def test_score(tpLoss, tnLoss, fpLoss, fnLoss):
+    test = (fpLoss + fnLoss)
+    return test
 
 
 def accuracy_score(tpLoss, tnLoss, fpLoss, fnLoss):
@@ -50,8 +56,9 @@ def accuracy_score(tpLoss, tnLoss, fpLoss, fnLoss):
 
 SCORES = {
     "csi": csi_score,
-    "mod_csi": mod_csi_score,
+    "ppcr": ppcr_score,
     "accuracy": accuracy_score,
+    "test1": test_score,
 }
 
 

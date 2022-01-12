@@ -11,6 +11,8 @@ def csi_soft_loss(
     prototype_labels,
     theta_boundary,
     distribution=None,
+    score=None,
+    gamma=0.1,
     sigma=0.1,
 ):
     """
@@ -41,11 +43,10 @@ def csi_soft_loss(
 
     tpLoss = torch.clip(tpLoss, min=1e-4)
 
-    #csi = (tpLoss) / (fnLoss + fpLoss + tpLoss)
-    csi = (tpLoss.mean(dim=1)) / (fnLoss.mean(dim=1) + fpLoss.mean(dim=1) +
-                                  tpLoss.mean(dim=1))
-    print(csi.shape)
-    """
+    csi = (tpLoss) / (fnLoss + fpLoss + tpLoss)
+    #csi = (tpLoss.mean(dim=1)) / (fnLoss.mean(dim=1) + fpLoss.mean(dim=1) +
+    #                              tpLoss.mean(dim=1))
+
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
     local_loss = torch.zeros(size=(distances.shape[0],
@@ -60,7 +61,7 @@ def csi_soft_loss(
         ).squeeze()
 
     csi = local_loss
-    """
+
     loss = 1 / csi
 
     return loss.mean()
@@ -84,14 +85,13 @@ def lpcsi_loss(
         distribution = 'studentT'
 
     if score is None:
-        score = 'csi_score'
+        score = 'csi'
 
     #prob = get_probabilities(
     #    distances,
     #    gamma,
     #    distribution=distribution,
     #)
-
     prob = torch.where(distances < theta_boundary, 1, 0)
 
     heavyside = sigmoid(theta_boundary - distances, sigma)
@@ -142,10 +142,13 @@ def lpcsi_loss(
 
     scores = get_scores(score, tp_local, tn_local, fp_local, fn_local)
 
-    classification_loss = scores
-    representation_loss, _ = NeuralGasEnergy(lm=1)(distances)
+    classification_loss = -scores
+    print(distances.shape, target_labels.shape,
+          distances[1 - target_labels].shape)
+    representation_loss, _ = NeuralGasEnergy(lm=1)(distances[1 -
+                                                             target_labels])
 
-    alpha = 0.5
+    alpha = 1.
     return alpha * classification_loss.mean() + (
         1 - alpha) * representation_loss.mean()
 

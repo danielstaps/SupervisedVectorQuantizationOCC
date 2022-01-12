@@ -29,7 +29,7 @@ def get_theta(train_ds, model):
 
 class OneClassInitialization:
     def __init__(self, hparams, **kwargs):
-        # Collect ARguments
+        # Collect Arguments
         loss = kwargs.pop("loss", csi_soft_loss)
         self.p_distribution = kwargs.pop("p_distribution", None)
         self.score = kwargs.pop("score", None)
