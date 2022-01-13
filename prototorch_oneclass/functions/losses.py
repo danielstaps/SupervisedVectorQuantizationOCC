@@ -85,9 +85,7 @@ def lpcsi_loss(distances,
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
-    print(theta_boundary)
-    if backbone:
-        print(backbone.detach().cpu())
+    #print(theta_boundary)
 
     if distribution is None:
         distribution = 'studentT'
@@ -133,10 +131,10 @@ def lpcsi_loss(distances,
 
     #classification_loss = 1 / scores
     classification_loss = -scores
-    representation_loss, _ = NeuralGasEnergy(lm=1)(distances[1 -
-                                                             target_labels, :])
+    representation_loss, _ = NeuralGasEnergy(lm=1)(
+        distances[target_labels == 0, :])
 
-    alpha = 0.
+    alpha = 0.5
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 
@@ -154,9 +152,7 @@ def occ_entropy_loss(distances,
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
-    print(theta_boundary)
-    if backbone is not None:
-        print(backbone.detach().cpu())
+    #print(theta_boundary)
 
     if distribution is None:
         distribution = 'studentT'
@@ -205,8 +201,6 @@ def occ_entropy_loss(distances,
         class_ng_loss, _ = NeuralGasEnergy(lm=1)(
             distances[target_labels == i, :])
         class_ng[i] = class_ng_loss
-
-    print(class_ng)
 
     #classification_loss = 1 / scores
     classification_loss = win_ce
