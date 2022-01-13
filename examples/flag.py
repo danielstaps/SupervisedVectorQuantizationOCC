@@ -5,18 +5,19 @@ import prototorch as pt
 import pytorch_lightning as pl
 import torch
 # Prototorch One Class Classifier
-from prototorch_oneclass import OneClassLGMLVQ
+from prototorch_oneclass import OneClassGMLVQ
 from prototorch_oneclass.datasets import Flag
 from prototorch_oneclass.functions.callbacks import (SigmaCallback,
                                                      ThetaCallback)
-from prototorch_oneclass.functions.losses import csi_soft_loss
+from prototorch_oneclass.functions.losses import (csi_soft_loss,
+                                                  occ_entropy_loss)
 
 # Configuration
-num_classes = 2
+num_classes = 1
 num_samples = 1000
 dimensions = 2
 thickness = 0.4
-prototypes_per_class = 1
+prototypes_per_class = 7
 
 if __name__ == "__main__":
     # Command-line arguments
@@ -29,6 +30,7 @@ if __name__ == "__main__":
         num_samples=num_samples,
         dimensions=dimensions,
         num_classes=num_classes,
+        blobs_per_class=3,
     )
 
     # Dataloaders
@@ -48,14 +50,14 @@ if __name__ == "__main__":
     )
 
     # Initialize the model
-    model = OneClassLGMLVQ(
-        hparams,
-        optimizer=torch.optim.Adam,
-        prototypes_initializer=pt.core.SMCI(train_ds),
-        theta_initializer=train_ds,
-        loss=csi_soft_loss,
-        theta_trainable=True,
-    )
+    model = OneClassGMLVQ(hparams,
+                          optimizer=torch.optim.Adam,
+                          prototypes_initializer=pt.core.SSCI(train_ds),
+                          omega_initializer=pt.core.PCALTI(train_ds.data),
+                          theta_initializer=train_ds,
+                          loss=occ_entropy_loss,
+                          theta_trainable=True,
+                          p_distribution='gauss')
 
     # Callbacks
     vis = pt.models.VisGLVQ2D(train_ds, show_last_only=False, block=False)
@@ -65,7 +67,7 @@ if __name__ == "__main__":
         args,
         callbacks=[
             vis,
-            ThetaCallback(),
+            #ThetaCallback(),
             SigmaCallback(),
         ],
         detect_anomaly=True,

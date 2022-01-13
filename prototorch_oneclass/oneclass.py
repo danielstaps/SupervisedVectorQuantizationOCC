@@ -28,7 +28,7 @@ def get_theta(train_ds, model):
 
 
 class OneClassInitialization:
-    def __init__(self, hparams, **kwargs):
+    def __init__(self, backbone, hparams, **kwargs):
         # Collect Arguments
         loss = kwargs.pop("loss", csi_soft_loss)
         self.p_distribution = kwargs.pop("p_distribution", None)
@@ -74,10 +74,25 @@ class OneClassInitialization:
                     distribution=self.p_distribution,
                     score=self.score,
                     gamma=self._gamma,
-                    sigma=self._sigma),
+                    sigma=self._sigma,
+                    backbone=backbone),
             name=loss.__name__,
         )
         self.competition_layer = WTAC_Thresh(theta_boundary=self._theta)
+
+    def configure_optimizers(self):
+        proto_opt = self.optimizer(self.proto_layer.parameters(),
+                                   lr=self.hparams.proto_lr)
+        # Only add a backbone optimizer if backbone has trainable parameters
+        bb_params = list(self.backbone.parameters())
+        if (bb_params):
+            bb_opt = self.optimizer(bb_params, lr=self.hparams.bb_lr)
+            optimizers = [proto_opt, bb_opt]
+        else:
+            optimizers = [proto_opt]
+        theta_opt = self.optimizer(self._theta, lr=self.hparams.theta_lr)
+        optimizers.append(theta_opt)
+        return optimizers
 
     @property
     def theta_boundary(self):
@@ -99,7 +114,9 @@ class OneClassGMLVQ(
 ):
     def __init__(self, hparams, **kwargs) -> None:
         GMLVQ.__init__(self, hparams, **kwargs)
-        OneClassInitialization.__init__(self, hparams, **kwargs)
+        OneClassInitialization.__init__(self, self._omega, hparams, **kwargs)
+
+        self._omega.requires_grad = False
 
 
 class OneClassLGMLVQ(

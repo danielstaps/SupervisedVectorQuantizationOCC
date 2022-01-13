@@ -46,7 +46,7 @@ def ppcr_score(tpLoss, tnLoss, fpLoss, fnLoss):
 
 def test_score(tpLoss, tnLoss, fpLoss, fnLoss):
     test = (fpLoss + fnLoss)
-    return test
+    return -test
 
 
 def accuracy_score(tpLoss, tnLoss, fpLoss, fnLoss):

@@ -14,10 +14,15 @@ def csi_soft_loss(
     score=None,
     gamma=0.1,
     sigma=0.1,
+    backbone=None,
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
+
+    if backbone is not None:
+        print(theta_boundary)
+        print(backbone.detach().cpu())
 
     if distribution is None:
         distribution = 'studentT'
@@ -35,7 +40,7 @@ def csi_soft_loss(
         theta_boundary,
     )
 
-    trick17 = prob * sigmoid(theta_boundary - distances, sigma)
+    trick17 = prob  #* sigmoid(theta_boundary - distances, sigma)
 
     tpLoss = tp * trick17
     fpLoss = fp * trick17
@@ -67,19 +72,22 @@ def csi_soft_loss(
     return loss.mean()
 
 
-def lpcsi_loss(
-    distances,
-    target_labels,
-    prototype_labels,
-    theta_boundary,
-    distribution=None,
-    score=None,
-    gamma=0.1,
-    sigma=0.1,
-):
+def lpcsi_loss(distances,
+               target_labels,
+               prototype_labels,
+               theta_boundary,
+               distribution=None,
+               score=None,
+               gamma=0.1,
+               sigma=0.1,
+               backbone=None):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
+
+    print(theta_boundary)
+    if backbone:
+        print(backbone.detach().cpu())
 
     if distribution is None:
         distribution = 'studentT'
@@ -105,52 +113,110 @@ def lpcsi_loss(
     fpLoss = (1 - kronecker_delta_plus) * heavyside * prob
     fnLoss = kronecker_delta_plus * (1 - heavyside * prob)
 
-    tpLoss = torch.clip(tpLoss, min=1e-4)
+    if score == 'csi':
+        tpLoss = torch.clip(tpLoss, min=1e-4)
 
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
 
-    tp_local = torch.zeros(size=(distances.shape[0],
-                                 num_classes)).type_as(distances)
-    tn_local = torch.zeros(size=(distances.shape[0],
-                                 num_classes)).type_as(distances)
-    fp_local = torch.zeros(size=(distances.shape[0],
-                                 num_classes)).type_as(distances)
-    fn_local = torch.zeros(size=(distances.shape[0],
-                                 num_classes)).type_as(distances)
-
+    local_scores = get_scores(score, tpLoss, tnLoss, fpLoss, fnLoss)
+    scores = torch.zeros(size=(distances.shape[0],
+                               num_classes)).type_as(distances)
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
         winning_indices = torch.min(selected_distances, dim=1).indices
-        tp_local[:, i] = tpLoss[:, protoii].gather(
-            1,
-            winning_indices.unsqueeze(1),
-        ).squeeze()
-        tn_local[:, i] = tnLoss[:, protoii].gather(
-            1,
-            winning_indices.unsqueeze(1),
-        ).squeeze()
-        fp_local[:, i] = fpLoss[:, protoii].gather(
-            1,
-            winning_indices.unsqueeze(1),
-        ).squeeze()
-        fn_local[:, i] = fnLoss[:, protoii].gather(
+        scores[:, i] = local_scores[:, protoii].gather(
             1,
             winning_indices.unsqueeze(1),
         ).squeeze()
 
-    scores = get_scores(score, tp_local, tn_local, fp_local, fn_local)
-
+    #classification_loss = 1 / scores
     classification_loss = -scores
-    print(distances.shape, target_labels.shape,
-          distances[1 - target_labels].shape)
     representation_loss, _ = NeuralGasEnergy(lm=1)(distances[1 -
-                                                             target_labels])
+                                                             target_labels, :])
 
-    alpha = 1.
-    return alpha * classification_loss.mean() + (
-        1 - alpha) * representation_loss.mean()
+    alpha = 0.
+    return alpha * representation_loss.mean() + (
+        1 - alpha) * classification_loss.mean()
+
+
+def occ_entropy_loss(distances,
+                     target_labels,
+                     prototype_labels,
+                     theta_boundary,
+                     distribution=None,
+                     score=None,
+                     gamma=0.1,
+                     sigma=0.1,
+                     backbone=None):
+    """
+    OneClassClassifier loss function implemented with Student-t distribution
+    """
+
+    print(theta_boundary)
+    if backbone is not None:
+        print(backbone.detach().cpu())
+
+    if distribution is None:
+        distribution = 'studentT'
+
+    if score is None:
+        score = 'csi'
+
+    prob = get_probabilities(
+        distances,
+        #gamma,
+        theta_boundary,
+        distribution=distribution,
+    )
+    #prob = torch.where(distances < theta_boundary, 1, 0)
+    heavyside = sigmoid(theta_boundary - distances, sigma)
+
+    target_class_plus = torch.where(target_labels == 0, 1, 0)
+    if len(target_class_plus.shape) < 2:
+        target_class_plus = torch.unsqueeze(target_class_plus, 1)
+
+    r = heavyside * prob
+    epsilon = 1e-10
+
+    tpLoss = target_class_plus * torch.log(r + epsilon)
+    tnLoss = (1 - target_class_plus) * torch.log((1 - r) + epsilon)
+
+    local_ce = -(tpLoss + tnLoss)
+
+    classes = torch.unique(prototype_labels)
+    num_classes = classes.shape[0]
+
+    win_ce = torch.zeros(size=(distances.shape[0],
+                               num_classes)).type_as(distances)
+    class_ng = torch.zeros(size=(num_classes, )).type_as(distances)
+
+    for i in classes:
+        # classification
+        protoii = torch.eq(i, prototype_labels)
+        selected_distances = distances[:, protoii]
+        winning_indices = torch.min(selected_distances, dim=1).indices
+        win_ce[:, i] = local_ce[:, protoii].gather(
+            1,
+            winning_indices.unsqueeze(1),
+        ).squeeze()
+        # representation
+        class_ng_loss, _ = NeuralGasEnergy(lm=1)(
+            distances[target_labels == i, :])
+        class_ng[i] = class_ng_loss
+
+    print(class_ng)
+
+    #classification_loss = 1 / scores
+    classification_loss = win_ce
+    #representation_loss, _ = NeuralGasEnergy(lm=1)(
+    #    distances[target_labels == 0, :])
+    representation_loss = class_ng
+
+    alpha = 0.5
+    return alpha * representation_loss.mean() + (
+        1 - alpha) * classification_loss.mean()
 
 
 def brier_score(

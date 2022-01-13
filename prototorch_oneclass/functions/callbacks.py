@@ -19,6 +19,10 @@ class ThetaCallback(Callback):
                 f"Attention! Theta Minimum was to low! Theta={min(actual_theta)} Please consider increasing LATENT_DIM or decreasing PROTOTYPES Parameters."
             )
 
+        # setze minimum von theta (minimale Datendistanz/2)
+        # als minimale distance?
+        # theta nach oben begrenzen (maximale Datendistanz/2) -> Datendistanz zwischen 2 x
+
 
 class SigmaCallback(Callback):
     def __init__(self, ):

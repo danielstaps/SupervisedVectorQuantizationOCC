@@ -9,14 +9,15 @@ from prototorch_oneclass import OneClassGMLVQ
 from prototorch_oneclass.datasets import Polygon
 from prototorch_oneclass.functions.callbacks import (SigmaCallback,
                                                      ThetaCallback)
-from prototorch_oneclass.functions.losses import csi_soft_loss
+from prototorch_oneclass.functions.losses import (csi_soft_loss,
+                                                  occ_entropy_loss)
 
 # Configuration
-num_classes = 4
+num_classes = 3
 num_samples = 1000
 dimensions = 2
 thickness = 0.4
-prototypes_per_class = 1
+prototypes_per_class = 3
 
 if __name__ == "__main__":
     # Command-line arguments
@@ -52,9 +53,10 @@ if __name__ == "__main__":
     model = OneClassGMLVQ(
         hparams,
         optimizer=torch.optim.Adam,
-        prototypes_initializer=pt.core.SMCI(train_ds),
+        prototypes_initializer=pt.core.SSCI(train_ds),
+        omega_initializer=pt.core.PCALTI(train_ds.data),
         theta_initializer=train_ds,
-        loss=csi_soft_loss,
+        loss=occ_entropy_loss,
         theta_trainable=True,
         p_distribution="gauss",
     )
@@ -69,11 +71,10 @@ if __name__ == "__main__":
         args,
         callbacks=[
             vis,
-            ThetaCallback(),
+            #ThetaCallback(),
             SigmaCallback(),
         ],
         detect_anomaly=True,
-        gpus=1,
     )
 
     # Training loop
