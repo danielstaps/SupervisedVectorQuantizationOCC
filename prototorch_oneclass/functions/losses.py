@@ -85,20 +85,19 @@ def lpcsi_loss(distances,
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
-    #print(theta_boundary)
-
     if distribution is None:
-        distribution = 'studentT'
+        distribution = 'gauss'
 
     if score is None:
-        score = 'csi'
+        score = 'pcs'
 
-    #prob = get_probabilities(
-    #    distances,
-    #    gamma,
-    #    distribution=distribution,
-    #)
-    prob = torch.where(distances < theta_boundary, 1, 0)
+    prob = get_probabilities(
+        distances,
+        #gamma,
+        theta_boundary,
+        distribution=distribution,
+    )
+    #prob = torch.where(distances < theta_boundary, 1, 0)
 
     heavyside = sigmoid(theta_boundary - distances, sigma)
 
@@ -134,7 +133,7 @@ def lpcsi_loss(distances,
     representation_loss, _ = NeuralGasEnergy(lm=1)(
         distances[target_labels == 0, :])
 
-    alpha = 0.5
+    alpha = 0.1
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 
@@ -152,13 +151,8 @@ def occ_entropy_loss(distances,
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
-    #print(theta_boundary)
-
     if distribution is None:
         distribution = 'studentT'
-
-    if score is None:
-        score = 'csi'
 
     prob = get_probabilities(
         distances,
@@ -202,13 +196,10 @@ def occ_entropy_loss(distances,
             distances[target_labels == i, :])
         class_ng[i] = class_ng_loss
 
-    #classification_loss = 1 / scores
     classification_loss = win_ce
-    #representation_loss, _ = NeuralGasEnergy(lm=1)(
-    #    distances[target_labels == 0, :])
     representation_loss = class_ng
 
-    alpha = 0.5
+    alpha = 0.1
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 

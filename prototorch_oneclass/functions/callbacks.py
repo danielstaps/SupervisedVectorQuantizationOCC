@@ -27,14 +27,16 @@ class ThetaCallback(Callback):
         classes = torch.unique(pl_module.prototype_labels)
         min_max = []
         for i in classes:
-            x = self.train_ds.data[self.train_ds.target]
-            d_class = squared_euclidean_distance(x, x)
+            x = self.train_ds.data[self.train_ds.target == i, :]
+            if hasattr(pl_module, '_omega'):
+                d_class = pl_module.distance_layer(x, x, pl_module._omega)
+            else:
+                d_class = pl_module.distance_layer(x, x)
             min_max.append([
-                torch.amin(d_class[d_class != 0]) * 0.5,
-                torch.amax(d_class) * 0.5
+                #torch.amin(d_class[d_class != 0]) * 0.5,
+                torch.quantile(d_class, 0.2) * 0.5,
+                torch.amax(d_class) * 0.5,
             ])
-        print(min_max)
-        print(state_dict['_theta'])
         for i in classes:
             ii = pl_module.prototype_labels == i
             for j, e in enumerate(ii):
@@ -44,18 +46,12 @@ class ThetaCallback(Callback):
                         min=min_max[i][0],
                         max=min_max[i][1])
         pl_module.load_state_dict(state_dict)
-        print(state_dict['_theta'])
 
 
 class SigmaCallback(Callback):
-    def __init__(self, ):
-        self.e = 0
-
     def on_train_epoch_end(self, trainer, pl_module) -> None:
-        self.e += 1
-        max_epochs = trainer.max_epochs
         state_dict = pl_module.state_dict()
-        state_dict['_sigma'] -= torch.Tensor([0.99 / max_epochs])
+        state_dict['_sigma'] -= torch.Tensor([0.99 / trainer.max_epochs])
         #state_dict['_sigma'] *= 0.9991
-        #state_dict['_sigma'] -= exp(Tensor([-self.e / 100]))
+        #state_dict['_sigma'] -= exp(Tensor([-trainer.current_epoch / 100]))
         pl_module.load_state_dict(state_dict)

@@ -39,9 +39,13 @@ def csi_score(tpLoss, tnLoss, fpLoss, fnLoss):
 
 
 def ppcr_score(tpLoss, tnLoss, fpLoss, fnLoss):
-    #ppcr = (tpLoss + fpLoss) / (tpLoss + fpLoss + tnLoss + fnLoss)
-    ppcr = tpLoss - fpLoss
+    ppcr = (tpLoss + fpLoss) / (tpLoss + fpLoss + tnLoss + fnLoss)
     return ppcr
+
+
+def prob_contrastive_score(tpLoss, tnLoss, fpLoss, fnLoss):
+    pcs = tpLoss - fpLoss
+    return pcs
 
 
 def test_score(tpLoss, tnLoss, fpLoss, fnLoss):
@@ -59,6 +63,7 @@ SCORES = {
     "ppcr": ppcr_score,
     "accuracy": accuracy_score,
     "test1": test_score,
+    "pcs": prob_contrastive_score,
 }
 
 
