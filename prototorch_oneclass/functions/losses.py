@@ -44,7 +44,7 @@ def csi_soft_loss(
 
     tpLoss = tp * trick17
     fpLoss = fp * trick17
-    fnLoss = 1 - (fn * trick17)
+    fnLoss = 1 - (fn * trick17)tive loss
 
     tpLoss = torch.clip(tpLoss, min=1e-4)
 
@@ -210,6 +210,10 @@ def brier_score(
     prototype_labels,
     theta_boundary,
     distribution=None,
+    score=None,
+    gamma=0.1,
+    sigma=0.1,
+    backbone=None
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
