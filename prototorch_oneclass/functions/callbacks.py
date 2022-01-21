@@ -51,7 +51,7 @@ class ThetaCallback(Callback):
 class SigmaCallback(Callback):
     def on_train_epoch_end(self, trainer, pl_module) -> None:
         state_dict = pl_module.state_dict()
-        state_dict['_sigma'] -= torch.Tensor([0.99 / trainer.max_epochs])
+        #state_dict['_sigma'] -= torch.Tensor([0.8 / trainer.max_epochs])
         #state_dict['_sigma'] *= 0.9991
-        #state_dict['_sigma'] -= exp(Tensor([-trainer.current_epoch / 100]))
+        state_dict['_sigma'] = torch.exp(torch.Tensor([-trainer.current_epoch / trainer.max_epochs]))
         pl_module.load_state_dict(state_dict)

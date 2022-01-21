@@ -44,7 +44,7 @@ def csi_soft_loss(
 
     tpLoss = tp * trick17
     fpLoss = fp * trick17
-    fnLoss = 1 - (fn * trick17)tive loss
+    fnLoss = 1 - (fn * trick17)
 
     tpLoss = torch.clip(tpLoss, min=1e-4)
 
@@ -105,10 +105,12 @@ def lpcsi_loss(distances,
     if len(kronecker_delta_plus.shape) < 2:
         kronecker_delta_plus = torch.unsqueeze(kronecker_delta_plus, 1)
 
-    tpLoss = kronecker_delta_plus * heavyside * prob
-    tnLoss = (1 - kronecker_delta_plus) * (1 - heavyside * prob)
-    fpLoss = (1 - kronecker_delta_plus) * heavyside * prob
-    fnLoss = kronecker_delta_plus * (1 - heavyside * prob)
+    r = heavyside * prob
+
+    tpLoss = kronecker_delta_plus * r
+    tnLoss = (1 - kronecker_delta_plus) * (1 - r)
+    fpLoss = (1 - kronecker_delta_plus) * r
+    fnLoss = kronecker_delta_plus * (1 - r)
 
     if score == 'csi':
         tpLoss = torch.clip(tpLoss, min=1e-4)
@@ -168,6 +170,7 @@ def occ_entropy_loss(distances,
         target_class_plus = torch.unsqueeze(target_class_plus, 1)
 
     r = heavyside * prob
+   
     epsilon = 1e-10
 
     tpLoss = target_class_plus * torch.log(r + epsilon)
@@ -227,7 +230,9 @@ def brier_score(
         theta_boundary,
         distribution=distribution,
     )
-
+    heavyside = sigmoid(theta_boundary - distances, sigma)
+    r = heavyside * prob
+   
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
 
@@ -235,16 +240,23 @@ def brier_score(
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
-        selected_probs = prob[:, protoii]
+        selected_r = r[:, protoii]
         winning_indices = torch.min(
             selected_distances,
             dim=1,
         ).indices
-        p = selected_probs.gather(1, winning_indices.unsqueeze(1)).squeeze()
+        r_win = selected_r.gather(1, winning_indices.unsqueeze(1)).squeeze()
         c = torch.where(target_labels == i, 1, 0)
 
-        local_loss[i] = ((p - c)**2).mean()
+        local_loss[i] = ((r_win - c)**2).mean()
+        # representation
+        class_ng_loss, _ = NeuralGasEnergy(lm=1)(
+            distances[target_labels == i, :])
+        class_ng[i] = class_ng_loss
 
-    loss = local_loss
+    classification_loss = local_loss
+    representation_loss = class_ng
 
-    return loss.mean()
+    alpha = 0.1
+    return alpha * representation_loss.mean() + (
+        1 - alpha) * classification_loss.mean()
