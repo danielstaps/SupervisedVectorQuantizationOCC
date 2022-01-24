@@ -65,7 +65,7 @@ class OneClassInitialization:
         self.register_parameter(
             "_sigma",
             Parameter(
-                torch.Tensor([1.]),
+                torch.Tensor([10.]),
                 requires_grad=False,
             ),
         )

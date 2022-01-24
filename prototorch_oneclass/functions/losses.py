@@ -135,7 +135,7 @@ def lpcsi_loss(distances,
     representation_loss, _ = NeuralGasEnergy(lm=1)(
         distances[target_labels == 0, :])
 
-    alpha = 0.1
+    alpha = 0.2
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 
@@ -163,8 +163,8 @@ def occ_entropy_loss(distances,
         distribution=distribution,
     )
     #prob = torch.where(distances < theta_boundary, 1, 0)
-    heavyside = sigmoid(theta_boundary - distances, sigma)
 
+    heavyside = sigmoid(theta_boundary - distances, sigma)
     target_class_plus = torch.where(target_labels == 0, 1, 0)
     if len(target_class_plus.shape) < 2:
         target_class_plus = torch.unsqueeze(target_class_plus, 1)
@@ -202,7 +202,7 @@ def occ_entropy_loss(distances,
     classification_loss = win_ce
     representation_loss = class_ng
 
-    alpha = 0.1
+    alpha = 0.2
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 
@@ -237,6 +237,7 @@ def brier_score(
     num_classes = classes.shape[0]
 
     local_loss = torch.zeros(size=(num_classes, ))
+    class_ng = torch.zeros(size=(num_classes, )).type_as(distances)
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
@@ -257,6 +258,6 @@ def brier_score(
     classification_loss = local_loss
     representation_loss = class_ng
 
-    alpha = 0.1
+    alpha = 0.2
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()

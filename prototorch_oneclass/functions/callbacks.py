@@ -54,4 +54,5 @@ class SigmaCallback(Callback):
         #state_dict['_sigma'] -= torch.Tensor([0.8 / trainer.max_epochs])
         #state_dict['_sigma'] *= 0.9991
         state_dict['_sigma'] = torch.exp(torch.Tensor([-trainer.current_epoch / trainer.max_epochs]))
+        #state_dict['_sigma'] *= torch.Tensor([0.9 ** (10 / trainer.max_epochs)])        
         pl_module.load_state_dict(state_dict)
