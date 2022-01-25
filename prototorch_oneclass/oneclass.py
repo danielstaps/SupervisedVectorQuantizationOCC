@@ -22,11 +22,13 @@ def get_theta(train_ds, model):
 
     for i, label in enumerate(plabels):
         idx = torch.argmin(d[y_train == label], dim=1) == i
+        t_value = torch.quantile(d[y_train == label, i], quantile)
         if sum(idx) == 0:
-            theta[i] = torch.quantile(d[y_train == label, i], quantile)
+            theta[i] = t_value
         else:
             theta[i] = torch.quantile(d[y_train == label, i][idx], quantile)
-
+            if theta[i] <= t_value:
+                theta[i] = t_value
     return theta
 
 
@@ -65,7 +67,7 @@ class OneClassInitialization:
         self.register_parameter(
             "_sigma",
             Parameter(
-                torch.Tensor([10.]),
+                torch.Tensor([1.]),
                 requires_grad=False,
             ),
         )
