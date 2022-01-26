@@ -14,6 +14,8 @@ def csi_soft_loss(
     score=None,
     gamma=0.1,
     sigma=0.1,
+    ng_lambda=1.,
+    alpha=1.,
     backbone=None,
 ):
     """
@@ -80,6 +82,8 @@ def lpcsi_loss(distances,
                score=None,
                gamma=0.1,
                sigma=0.1,
+               ng_lambda=1.,
+               alpha=1.,
                backbone=None):
     """
     OneClassClassifier loss function implemented with Student-t distribution
@@ -132,10 +136,9 @@ def lpcsi_loss(distances,
 
     #classification_loss = 1 / scores
     classification_loss = -scores
-    representation_loss, _ = NeuralGasEnergy(lm=1)(
+    representation_loss, _ = NeuralGasEnergy(lm=ng_lambda)(
         distances[target_labels == 0, :])
 
-    alpha = 0.2
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 
@@ -148,6 +151,8 @@ def occ_entropy_loss(distances,
                      score=None,
                      gamma=0.1,
                      sigma=0.1,
+                     ng_lambda=1.,
+                     alpha=1.,
                      backbone=None):
     """
     OneClassClassifier loss function implemented with Student-t distribution
@@ -195,14 +200,12 @@ def occ_entropy_loss(distances,
             winning_indices.unsqueeze(1),
         ).squeeze()
         # representation
-        class_ng_loss, _ = NeuralGasEnergy(lm=1)(
+        class_ng_loss, _ = NeuralGasEnergy(lm=ng_lambda)(
             distances[target_labels == i, :])
         class_ng[i] = class_ng_loss
 
     classification_loss = win_ce
     representation_loss = class_ng
-
-    alpha = 0.2
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()
 
@@ -216,6 +219,8 @@ def brier_score(
     score=None,
     gamma=0.1,
     sigma=0.1,
+    ng_lambda=1.,
+    alpha=1.,
     backbone=None
 ):
     """
@@ -251,13 +256,11 @@ def brier_score(
 
         local_loss[i] = ((r_win - c)**2).mean()
         # representation
-        class_ng_loss, _ = NeuralGasEnergy(lm=1)(
+        class_ng_loss, _ = NeuralGasEnergy(lm=ng_lambda)(
             distances[target_labels == i, :])
         class_ng[i] = class_ng_loss
 
     classification_loss = local_loss
     representation_loss = class_ng
-
-    alpha = 0.2
     return alpha * representation_loss.mean() + (
         1 - alpha) * classification_loss.mean()

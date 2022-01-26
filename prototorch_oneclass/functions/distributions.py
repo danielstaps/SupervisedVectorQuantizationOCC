@@ -8,7 +8,12 @@ def sigmoid(boundary_distance, sigma=0.1):
     implementation of sigmoid
     """
     #sigma = 0.1
-    return 1 / (1 + torch.exp(-boundary_distance / sigma))
+    exponent = -boundary_distance / sigma
+    mask = torch.where(exponent >= 20, 0.0, 1.0) # for numerical stablity
+    exponent *= mask
+    sig = 1 / (1 + torch.exp(exponent))
+    sig *= mask
+    return sig
 
 
 def studentT_fct(squared_distances, theta_boundary):

@@ -72,6 +72,22 @@ class OneClassInitialization:
             ),
         )
 
+        self.register_parameter(
+            "_ng_lambda",
+            Parameter(
+                torch.Tensor([0.5]),
+                requires_grad=False,
+            ),
+        )
+
+        self.register_parameter(
+            "_alpha",
+            Parameter(
+                torch.Tensor([1.]),
+                requires_grad=False,
+            ),
+        )
+
         # Layers
         self.loss = LambdaLayer(
             partial(loss,
@@ -80,6 +96,8 @@ class OneClassInitialization:
                     score=self.score,
                     gamma=self._gamma,
                     sigma=self._sigma,
+                    ng_lambda=self._ng_lambda,
+                    alpha=self._alpha,
                     backbone=backbone),
             name=loss.__name__,
         )

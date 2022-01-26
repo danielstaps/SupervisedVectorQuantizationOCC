@@ -53,6 +53,26 @@ class SigmaCallback(Callback):
         state_dict = pl_module.state_dict()
         #state_dict['_sigma'] -= torch.Tensor([0.8 / trainer.max_epochs])
         #state_dict['_sigma'] *= 0.9991
-        state_dict['_sigma'] = torch.exp(torch.Tensor([-trainer.current_epoch / trainer.max_epochs]))
+        state_dict['_sigma'] = torch.exp(torch.Tensor([-trainer.current_epoch * 8/ trainer.max_epochs]))
         #state_dict['_sigma'] *= torch.Tensor([0.9 ** (10 / trainer.max_epochs)])        
         pl_module.load_state_dict(state_dict)
+
+
+class NGCallback(Callback):
+    def on_train_epoch_end(self, trainer, pl_module) -> None:
+        state_dict = pl_module.state_dict()
+        state_dict['_ng_lambda'] -= torch.Tensor([(0.5 - 0.27) / trainer.max_epochs])
+        pl_module.load_state_dict(state_dict)
+
+
+class AlphaCallback(Callback):
+    def sigmoid(self, max_e, current_e):
+        return 0.2 + 0.8 * (1 / (1 + torch.exp(
+            torch.Tensor([(current_e - max_e / 2.) * 10. / max_e])
+            )))
+
+    def on_train_epoch_end(self, trainer, pl_module) -> None:
+        state_dict = pl_module.state_dict()
+        state_dict['_alpha'] = self.sigmoid(trainer.max_epochs, trainer.current_epoch)
+        pl_module.load_state_dict(state_dict)
+
