@@ -45,34 +45,42 @@ class ThetaCallback(Callback):
                         state_dict['_theta'][j],
                         min=min_max[i][0],
                         max=min_max[i][1])
+        print(state_dict['_theta'])
         pl_module.load_state_dict(state_dict)
 
 
-class SigmaCallback(Callback):
-    def on_train_epoch_end(self, trainer, pl_module) -> None:
-        state_dict = pl_module.state_dict()
-        #state_dict['_sigma'] -= torch.Tensor([0.8 / trainer.max_epochs])
-        #state_dict['_sigma'] *= 0.9991
-        state_dict['_sigma'] = torch.exp(torch.Tensor([-trainer.current_epoch * 8/ trainer.max_epochs]))
-        #state_dict['_sigma'] *= torch.Tensor([0.9 ** (10 / trainer.max_epochs)])        
-        pl_module.load_state_dict(state_dict)
-
-
-class NGCallback(Callback):
-    def on_train_epoch_end(self, trainer, pl_module) -> None:
-        state_dict = pl_module.state_dict()
-        state_dict['_ng_lambda'] -= torch.Tensor([(0.5 - 0.27) / trainer.max_epochs])
-        pl_module.load_state_dict(state_dict)
-
-
-class AlphaCallback(Callback):
-    def sigmoid(self, max_e, current_e):
-        return 0.2 + 0.8 * (1 / (1 + torch.exp(
-            torch.Tensor([(current_e - max_e / 2.) * 10. / max_e])
+class DynamicCallback(Callback):
+    def sigmoid_sigma(self, max_e, current_e):
+        return 0.0001 + 0.01 * (1 / (1 + torch.exp(
+            torch.Tensor([(current_e - max_e / 1.8) * 6. / max_e])
+            )))
+  
+    def sigmoid_alpha(self, max_e, current_e):
+        return 0.5 + 0.5 * (1 / (1 + torch.exp(
+            torch.Tensor([(current_e - max_e / 4.) * 20. / max_e])
             )))
 
+    def lin_pieces(self, max_e, current_e):
+        break_point = 0.25
+        if current_e >= break_point * max_e:
+            return torch.Tensor([0.27])
+        else:
+            return torch.Tensor([0.5 - ((0.5 - 0.27) / (max_e * break_point)) * current_e])
+
     def on_train_epoch_end(self, trainer, pl_module) -> None:
         state_dict = pl_module.state_dict()
-        state_dict['_alpha'] = self.sigmoid(trainer.max_epochs, trainer.current_epoch)
+        """
+        Probability soft to sharp
+        """
+        state_dict['_sigma'] = self.sigmoid_sigma(trainer.max_epochs, trainer.current_epoch)
+        """
+        Neural Gas Parameters
+        """
+        state_dict['_ng_lambda'] = self.lin_pieces(trainer.max_epochs, trainer.current_epoch)
+        """
+        Loss weighting
+        """
+        state_dict['_alpha'] = self.sigmoid_alpha(trainer.max_epochs, trainer.current_epoch)
+        
+        print(state_dict['_sigma'], state_dict['_ng_lambda'], state_dict['_alpha'])
         pl_module.load_state_dict(state_dict)
-
