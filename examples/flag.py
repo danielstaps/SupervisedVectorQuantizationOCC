@@ -48,7 +48,6 @@ if __name__ == "__main__":
         latent_dim=2,
         proto_lr=0.01,
         theta_lr=0.01,
-        #bb_lr=0.0,
     )
 
     # Initialize the model
