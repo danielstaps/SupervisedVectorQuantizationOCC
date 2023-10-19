@@ -48,7 +48,6 @@ if __name__ == "__main__":
         latent_dim=2,
         proto_lr=0.1,
         theta_lr=0.1,
-        #bb_lr=0.0,
     )
 
     # Initialize the model
@@ -56,7 +55,6 @@ if __name__ == "__main__":
         hparams,
         optimizer=torch.optim.Adam,
         prototypes_initializer=pt.core.SSCI(train_ds),
-        #omega_initializer=pt.core.Eye(),#pt.core.PCALTI(train_ds.data),
         theta_initializer=train_ds,
         loss=brier_score,
         theta_trainable=True,
