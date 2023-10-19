@@ -3,9 +3,8 @@
 from functools import partial
 
 import torch
-from prototorch.core.distances import (omega_distance,
-                                       squared_euclidean_distance)
-from prototorch.models.glvq import GLVQ, GMLVQ, LGMLVQ
+from prototorch.core.distances import squared_euclidean_distance
+from prototorch.models.glvq import GLVQ
 from prototorch.nn import LambdaLayer
 from torch.nn.parameter import Parameter
 
