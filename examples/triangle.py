@@ -62,19 +62,20 @@ if __name__ == "__main__":
         p_distribution="gauss",
     )
 
-    print(model._theta)
-
     # Callbacks
     vis = pt.models.VisGLVQ2D(train_ds, show_last_only=False, block=False)
 
     # Setup trainer
-    trainer = pl.Trainer.from_argparse_args(
-        args,
+    trainer = pl.Trainer(
+        accelerator="cuda" if args.gpus else "cpu",
+        devices=args.gpus if args.gpus else "auto",
+        fast_dev_run=args.fast_dev_run,
         callbacks=[
             vis,
             ThetaCallback(train_ds),
             DynamicCallback(),
         ],
+        max_epochs=100,
         detect_anomaly=True,
     )
 

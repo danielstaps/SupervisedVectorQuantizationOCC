@@ -10,15 +10,13 @@ def LocalProbabilisticResponsibility(
     theta_boundary,
     distribution,
     sigma,
+    zero_mean,
 ):
-
     if distribution is None:
-        distribution = 'studentT'
+        distribution = "studentT"
 
     prob = get_probabilities(
-        distances,
-        theta_boundary,
-        distribution=distribution,
+        distances, theta_boundary, distribution=distribution, zero_mean=zero_mean
     )
     heavyside = sigmoid(theta_boundary - distances, sigma)
 
@@ -31,23 +29,25 @@ def csi_soft_loss(
     target_labels,
     prototype_labels,
     theta_boundary,
+    zero_mean,
     distribution=None,
     score=None,
     sigma=0.1,
-    ng_lambda=1.,
-    alpha=1.,
+    ng_lambda=1.0,
+    alpha=1.0,
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
     if distribution is None:
-        distribution = 'studentT'
+        distribution = "studentT"
 
     prob = get_probabilities(
         distances,
         theta_boundary,
         distribution=distribution,
+        zero_mean=zero_mean,
     )
 
     tp, _, fp, fn = error_type_determination(
@@ -57,7 +57,7 @@ def csi_soft_loss(
         theta_boundary,
     )
 
-    trick17 = prob  #* sigmoid(theta_boundary - distances, sigma)
+    trick17 = prob  # * sigmoid(theta_boundary - distances, sigma)
 
     tpLoss = tp * trick17
     fpLoss = fp * trick17
@@ -66,21 +66,24 @@ def csi_soft_loss(
     tpLoss = torch.clip(tpLoss, min=1e-4)
 
     csi = (tpLoss) / (fnLoss + fpLoss + tpLoss)
-    #csi = (tpLoss.mean(dim=1)) / (fnLoss.mean(dim=1) + fpLoss.mean(dim=1) +
+    # csi = (tpLoss.mean(dim=1)) / (fnLoss.mean(dim=1) + fpLoss.mean(dim=1) +
     #                              tpLoss.mean(dim=1))
 
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
-    local_loss = torch.zeros(size=(distances.shape[0],
-                                   num_classes)).type_as(distances)
+    local_loss = torch.zeros(size=(distances.shape[0], num_classes)).type_as(distances)
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
         winning_indices = torch.min(selected_distances, dim=1).indices
-        local_loss[:, i] = csi[:, protoii].gather(
-            1,
-            winning_indices.unsqueeze(1),
-        ).squeeze()
+        local_loss[:, i] = (
+            csi[:, protoii]
+            .gather(
+                1,
+                winning_indices.unsqueeze(1),
+            )
+            .squeeze()
+        )
 
     csi = local_loss
 
@@ -94,24 +97,30 @@ def lpcsi_loss(
     target_labels,
     prototype_labels,
     theta_boundary,
+    zero_mean,
     distribution=None,
     score=None,
     sigma=0.1,
-    ng_lambda=1.,
-    alpha=1.,
+    ng_lambda=1.0,
+    alpha=1.0,
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
     if distribution is None:
-        distribution = 'gauss'
+        distribution = "gauss"
 
     if score is None:
-        score = 'pcs'
+        score = "pcs"
 
-    r = LocalProbabilisticResponsibility(distances, theta_boundary,
-                                         distribution, sigma)
+    r = LocalProbabilisticResponsibility(
+        distances,
+        theta_boundary,
+        distribution,
+        sigma,
+        zero_mean,
+    )
 
     kronecker_delta_plus = torch.where(target_labels == 0, 1, 0)
     if len(kronecker_delta_plus.shape) < 2:
@@ -122,31 +131,34 @@ def lpcsi_loss(
     fpLoss = (1 - kronecker_delta_plus) * r
     fnLoss = kronecker_delta_plus * (1 - r)
 
-    if score == 'csi':
+    if score == "csi":
         tpLoss = torch.clip(tpLoss, min=1e-4)
 
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
 
     local_scores = get_scores(score, tpLoss, tnLoss, fpLoss, fnLoss)
-    scores = torch.zeros(size=(distances.shape[0],
-                               num_classes)).type_as(distances)
+    scores = torch.zeros(size=(distances.shape[0], num_classes)).type_as(distances)
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
         winning_indices = torch.min(selected_distances, dim=1).indices
-        scores[:, i] = local_scores[:, protoii].gather(
-            1,
-            winning_indices.unsqueeze(1),
-        ).squeeze()
+        scores[:, i] = (
+            local_scores[:, protoii]
+            .gather(
+                1,
+                winning_indices.unsqueeze(1),
+            )
+            .squeeze()
+        )
 
-    #classification_loss = 1 / scores
+    # classification_loss = 1 / scores
     classification_loss = -scores
     representation_loss, _ = NeuralGasEnergy(lm=ng_lambda)(
-        distances[target_labels == 0, :])
+        distances[target_labels == 0, :]
+    )
 
-    return alpha * representation_loss.mean() + (
-        1 - alpha) * classification_loss.mean()
+    return alpha * representation_loss.mean() + (1 - alpha) * classification_loss.mean()
 
 
 def occ_entropy_loss(
@@ -154,21 +166,27 @@ def occ_entropy_loss(
     target_labels,
     prototype_labels,
     theta_boundary,
+    zero_mean,
     distribution=None,
     score=None,
     sigma=0.1,
-    ng_lambda=1.,
-    alpha=1.,
+    ng_lambda=1.0,
+    alpha=1.0,
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
     if distribution is None:
-        distribution = 'studentT'
+        distribution = "studentT"
 
-    r = LocalProbabilisticResponsibility(distances, theta_boundary,
-                                         distribution, sigma)
+    r = LocalProbabilisticResponsibility(
+        distances,
+        theta_boundary,
+        distribution,
+        sigma,
+        zero_mean,
+    )
 
     target_class_plus = torch.where(target_labels == 0, 1, 0)
     if len(target_class_plus.shape) < 2:
@@ -184,37 +202,38 @@ def occ_entropy_loss(
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
 
-    win_ce = torch.zeros(size=(distances.shape[0],
-                               num_classes)).type_as(distances)
-    class_ng = torch.zeros(size=(num_classes, )).type_as(distances)
+    win_ce = torch.zeros(size=(distances.shape[0], num_classes)).type_as(distances)
+    class_ng = torch.zeros(size=(num_classes,)).type_as(distances)
 
     for i in classes:
         # classification
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
         winning_indices = torch.min(selected_distances, dim=1).indices
-        win_ce[:, i] = local_ce[:, protoii].gather(
-            1,
-            winning_indices.unsqueeze(1),
-        ).squeeze()
+        win_ce[:, i] = (
+            local_ce[:, protoii]
+            .gather(
+                1,
+                winning_indices.unsqueeze(1),
+            )
+            .squeeze()
+        )
         # representation
         class_ng_loss, _ = NeuralGasEnergy(lm=ng_lambda)(
-            distances[target_labels == i, :])
+            distances[target_labels == i, :]
+        )
         class_ng[i] = class_ng_loss
 
     classification_loss = win_ce
     representation_loss = class_ng
-    return alpha * representation_loss.mean() + (
-        1 - alpha) * classification_loss.mean()
+    return alpha * representation_loss.mean() + (1 - alpha) * classification_loss.mean()
 
 
 def BrierScore(
     local_probabilistic_responsibility,
     target_class_detector,
 ):
-
-    brier_costs = ((local_probabilistic_responsibility -
-                    target_class_detector)**2)
+    brier_costs = (local_probabilistic_responsibility - target_class_detector) ** 2
 
     return brier_costs.mean()
 
@@ -224,24 +243,30 @@ def brier_score(
     target_labels,
     prototype_labels,
     theta_boundary,
+    zero_mean,
     distribution=None,
     score=None,
     sigma=0.1,
-    ng_lambda=1.,
-    alpha=1.,
+    ng_lambda=1.0,
+    alpha=1.0,
 ):
     """
     OneClassClassifier loss function implemented with Student-t distribution
     """
 
-    r = LocalProbabilisticResponsibility(distances, theta_boundary,
-                                         distribution, sigma)
+    r = LocalProbabilisticResponsibility(
+        distances,
+        theta_boundary,
+        distribution,
+        sigma,
+        zero_mean,
+    )
 
     classes = torch.unique(prototype_labels)
     num_classes = classes.shape[0]
 
-    local_loss = torch.zeros(size=(num_classes, ))
-    class_ng = torch.zeros(size=(num_classes, )).type_as(distances)
+    local_loss = torch.zeros(size=(num_classes,))
+    class_ng = torch.zeros(size=(num_classes,)).type_as(distances)
     for i in classes:
         protoii = torch.eq(i, prototype_labels)
         selected_distances = distances[:, protoii]
@@ -256,10 +281,10 @@ def brier_score(
         local_loss[i] = BrierScore(r_win, c)
         # representation
         class_ng_loss, _ = NeuralGasEnergy(lm=ng_lambda)(
-            distances[target_labels == i, :])
+            distances[target_labels == i, :]
+        )
         class_ng[i] = class_ng_loss
 
     classification_loss = local_loss
     representation_loss = class_ng
-    return alpha * representation_loss.mean() + (
-        1 - alpha) * classification_loss.mean()
+    return alpha * representation_loss.mean() + (1 - alpha) * classification_loss.mean()

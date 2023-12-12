@@ -82,5 +82,3 @@ if __name__ == "__main__":
 
     # Training loop
     trainer.fit(model, train_loader)
-    # Training loop
-    trainer.fit(model, train_loader)

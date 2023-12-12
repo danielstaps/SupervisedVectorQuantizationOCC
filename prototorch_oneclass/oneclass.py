@@ -81,6 +81,14 @@ class SVQ_Initialization:
             ),
         )
 
+        self.register_parameter(
+            "_zero_mean",
+            Parameter(
+                torch.Tensor([0.0]),
+                requires_grad=False,
+            ),
+        )
+
         # Layers
         self.loss = LambdaLayer(
             partial(
@@ -91,6 +99,7 @@ class SVQ_Initialization:
                 sigma=self._sigma,
                 ng_lambda=self._ng_lambda,
                 alpha=self._alpha,
+                zero_mean=self._zero_mean,
             ),
             name=loss.__name__,
         )
