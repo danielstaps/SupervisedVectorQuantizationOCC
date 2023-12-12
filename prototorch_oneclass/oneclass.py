@@ -3,6 +3,7 @@
 from functools import partial
 
 import torch
+import torchmetrics
 from prototorch.core.distances import squared_euclidean_distance
 from prototorch.models.glvq import GLVQ
 from prototorch.nn import LambdaLayer
@@ -34,7 +35,6 @@ def get_theta(train_ds, model):
 
 
 class SVQ_Initialization:
-
     def __init__(self, hparams, **kwargs):
         # Collect Arguments
         loss = kwargs.pop("loss", brier_score)
@@ -60,7 +60,7 @@ class SVQ_Initialization:
         self.register_parameter(
             "_sigma",
             Parameter(
-                torch.Tensor([1.]),
+                torch.Tensor([1.0]),
                 requires_grad=False,
             ),
         )
@@ -76,20 +76,22 @@ class SVQ_Initialization:
         self.register_parameter(
             "_alpha",
             Parameter(
-                torch.Tensor([1.]),
+                torch.Tensor([1.0]),
                 requires_grad=False,
             ),
         )
 
         # Layers
         self.loss = LambdaLayer(
-            partial(loss,
-                    theta_boundary=self._theta,
-                    distribution=self.p_distribution,
-                    score=self.score,
-                    sigma=self._sigma,
-                    ng_lambda=self._ng_lambda,
-                    alpha=self._alpha),
+            partial(
+                loss,
+                theta_boundary=self._theta,
+                distribution=self.p_distribution,
+                score=self.score,
+                sigma=self._sigma,
+                ng_lambda=self._ng_lambda,
+                alpha=self._alpha,
+            ),
             name=loss.__name__,
         )
         self.competition_layer = WTAC_Thresh(theta_boundary=self._theta)
@@ -104,10 +106,9 @@ class SVQ_Initialization:
 
 
 class SVQ_OCC(
-        GLVQ,
-        SVQ_Initialization,
+    GLVQ,
+    SVQ_Initialization,
 ):
-
     def __init__(self, hparams, **kwargs) -> None:
         GLVQ.__init__(self, hparams, **kwargs)
         SVQ_Initialization.__init__(self, hparams, **kwargs)
@@ -116,8 +117,36 @@ class SVQ_OCC(
         self.distance_layer = LambdaLayer(distance_fn)
 
     def configure_optimizers(self):
-        proto_opt = self.optimizer(self.proto_layer.parameters(),
-                                   lr=self.hparams.proto_lr)
-        theta_opt = self.optimizer([self._theta], lr=self.hparams.theta_lr)
-        optimizers = [proto_opt, theta_opt]
-        return optimizers
+        optimizer = self.optimizer(self.parameters(), lr=self.hparams.lr)
+        return optimizer
+
+    def log_acc(self, distances, targets, tag):
+        preds = self.predict_from_distances(distances)
+        accuracy = torchmetrics.functional.accuracy(
+            preds.int(),
+            targets.int(),
+            "multiclass",
+            num_classes=self.num_classes + 1,
+        )
+
+        self.log(
+            tag,
+            accuracy,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
+
+    def test_step(self, batch, batch_idx):
+        x, targets = batch
+
+        preds = self.predict(x)
+        accuracy = torchmetrics.functional.accuracy(
+            preds.int(),
+            targets.int(),
+            "multiclass",
+            num_classes=self.num_classes + 1,
+        )
+
+        self.log("test_acc", accuracy)
