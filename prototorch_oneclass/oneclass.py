@@ -14,7 +14,7 @@ from .functions.losses import brier_score
 
 
 def get_theta(train_ds, model):
-    x_train, y_train = train_ds.data, train_ds.target
+    x_train, y_train = train_ds.data, train_ds.targets
     d = model.compute_distances(x_train)
 
     _, plabels = model.proto_layer()
