@@ -4,14 +4,15 @@ from pytorch_lightning.callbacks import Callback
 
 class ThetaCallback(Callback):
     def __init__(self, train_ds):
-        self.train_ds = train_ds
+        self.data, self.targets = train_ds.data, train_ds.targets
 
     def on_train_batch_end(self, trainer, pl_module, *args, **kwargs):
+        self.data, self.targets = self.data.to(pl_module.device), self.targets.to(pl_module.device)
         state_dict = pl_module.state_dict()
         classes = torch.unique(pl_module.prototype_labels)
         min_max = []
         for i in classes:
-            x = self.train_ds.data[self.train_ds.target == i, :]
+            x = self.data[self.targets == i, :]
             x = x[:2500, :]
             if hasattr(pl_module, "_omega"):
                 d_class = pl_module.distance_layer(x, x, pl_module._omega)
@@ -28,13 +29,11 @@ class ThetaCallback(Callback):
             )
         for i in classes:
             ii = pl_module.prototype_labels == i
-            for j, e in enumerate(ii):
-                if e:
-                    state_dict["_theta"][j] = torch.clip(
-                        state_dict["_theta"][j],
-                        min=min_max[i][0].to(device=pl_module.device),
-                        max=min_max[i][1].to(device=pl_module.device),
-                    )
+            state_dict["_theta"][ii] = torch.clip(
+                state_dict["_theta"][ii],
+                min=min_max[i][0].to(device=pl_module.device),
+                max=min_max[i][1].to(device=pl_module.device),
+            )
         pl_module.load_state_dict(state_dict)
 
 
