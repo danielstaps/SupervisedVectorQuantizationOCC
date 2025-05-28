@@ -4,16 +4,13 @@ import argparse
 import prototorch as pt
 import pytorch_lightning as pl
 import torch
-
 # Prototorch One Class Classifier
 from prototorch_oneclass import SVQ_OCC
 from prototorch_oneclass.datasets import Polygon
-from prototorch_oneclass.functions.callbacks import DynamicCallback, ThetaCallback
-from prototorch_oneclass.functions.losses import (
-    brier_score,
-    lpcsi_loss,
-    occ_entropy_loss,
-)
+from prototorch_oneclass.functions.callbacks import (DynamicCallback,
+                                                     ThetaCallback)
+from prototorch_oneclass.functions.losses import (brier_score, lpcsi_loss,
+                                                  occ_entropy_loss)
 
 # Configuration
 num_classes = 3
@@ -47,7 +44,6 @@ if __name__ == "__main__":
     hparams = dict(
         distribution=(1, prototypes_per_class),
         input_dim=2,
-        # latent_dim=2,
         lr=0.1,
     )
 
