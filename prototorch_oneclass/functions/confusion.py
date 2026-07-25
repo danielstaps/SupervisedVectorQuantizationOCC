@@ -68,7 +68,6 @@ SCORES = {
 
 
 def get_scores(score, tpLoss, tnLoss, fpLoss, fnLoss):
-
     if score not in SCORES:
         raise ValueError(
             f"Unknown distribution {score} for distribution_handler, choose from {list(SCORES.keys())}"

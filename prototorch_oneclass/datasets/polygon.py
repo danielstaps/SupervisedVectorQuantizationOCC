@@ -8,7 +8,6 @@ np.random.seed(42)
 
 
 def make_polygon(num_samples=300, dimensions=2, num_classes=3, thickness=0.1):
-
     assert num_classes >= 3, "num_classes must be >=3"
 
     x, y = [], []

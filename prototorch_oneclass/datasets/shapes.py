@@ -6,7 +6,6 @@ np.random.seed(42)
 
 
 def create_shapes(num_samples=300, num_shapes=1, num_classes=1, outliers=0.0, **kwargs):
-
     keys = ["centers", "cluster_std", "random_state", "noise", "factor"]
     for key in keys:
         if key not in kwargs.keys() and key != "factor":
