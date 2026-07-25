@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 PROJECT_URL = "https://github.com/danielstaps/SupervisedVectorQuantizationOCC"
 DOWNLOAD_URL = "https://github.com/danielstaps/SupervisedVectorQuantizationOCC.git"
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 INSTALL_REQUIRES = [

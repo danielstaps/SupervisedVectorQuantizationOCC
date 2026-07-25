@@ -1,16 +1,16 @@
 """GLVQ example using the spiral dataset."""
+
 import argparse
 
 import prototorch as pt
 import pytorch_lightning as pl
 import torch
+
 # Prototorch One Class Classifier
 from prototorch_oneclass import SVQ_OCC
 from prototorch_oneclass.datasets import Polygon
-from prototorch_oneclass.functions.callbacks import (DynamicCallback,
-                                                     ThetaCallback)
-from prototorch_oneclass.functions.losses import (brier_score, lpcsi_loss,
-                                                  occ_entropy_loss)
+from prototorch_oneclass.functions.callbacks import DynamicCallback, ThetaCallback
+from prototorch_oneclass.functions.losses import brier_score
 
 # Configuration
 num_classes = 3

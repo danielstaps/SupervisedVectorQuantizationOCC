@@ -49,7 +49,7 @@ def prob_contrastive_score(tpLoss, tnLoss, fpLoss, fnLoss):
 
 
 def test_score(tpLoss, tnLoss, fpLoss, fnLoss):
-    test = (fpLoss + fnLoss)
+    test = fpLoss + fnLoss
     return -test
 
 

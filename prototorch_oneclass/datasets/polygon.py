@@ -1,4 +1,4 @@
-""" Datasets for OneClassClassifier inspired by the PalauFlag """
+"""Datasets for OneClassClassifier inspired by the PalauFlag"""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,8 +20,7 @@ def make_polygon(num_samples=300, dimensions=2, num_classes=3, thickness=0.1):
             high=[-1 + thickness, x_len + thickness],
             size=(num_samples // num_classes, dimensions),
         )
-        rot = np.asarray([[np.cos(phi), -np.sin(phi)],
-                          [np.sin(phi), np.cos(phi)]])
+        rot = np.asarray([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
         x_ = np.matmul(x_, rot)
         x.append(x_)
         y.append(np.full(num_samples // num_classes, i))
@@ -33,7 +32,6 @@ def make_polygon(num_samples=300, dimensions=2, num_classes=3, thickness=0.1):
 
 
 class Polygon(torch.utils.data.TensorDataset):
-
     def __init__(
         self,
         num_samples: int = 500,
@@ -47,7 +45,7 @@ class Polygon(torch.utils.data.TensorDataset):
         super().__init__(self.data, self.target)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     for i in range(2):
@@ -60,6 +58,6 @@ if __name__ == '__main__':
                 thickness=0.1 + 0.5 * i,
             )
             plt.subplot(2, 4, (i * 4) + j + 1)
-            plt.axis('equal')
+            plt.axis("equal")
             plt.scatter(x[:, 0], x[:, 1], c=y)
     plt.show()

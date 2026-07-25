@@ -55,8 +55,7 @@ class DynamicCallback(Callback):
 
     def sigmoid_alpha(self, max_e, current_e):
         return 0.5 + 0.5 * (
-            1
-            / (1 + torch.exp(torch.Tensor([(current_e - max_e / 4.0) * 20.0 / max_e])))
+            1 / (1 + torch.exp(torch.Tensor([(current_e - max_e / 4.0) * 20.0 / max_e])))
         )
 
     def lin_pieces(self, max_e, current_e):
@@ -64,29 +63,21 @@ class DynamicCallback(Callback):
         if current_e >= break_point * max_e:
             return torch.Tensor([0.27])
         else:
-            return torch.Tensor(
-                [0.5 - ((0.5 - 0.27) / (max_e * break_point)) * current_e]
-            )
+            return torch.Tensor([0.5 - ((0.5 - 0.27) / (max_e * break_point)) * current_e])
 
     def on_train_epoch_end(self, trainer, pl_module) -> None:
         state_dict = pl_module.state_dict()
         """
         Probability soft to sharp
         """
-        state_dict["_sigma"] = self.sigmoid_sigma(
-            trainer.max_epochs, trainer.current_epoch
-        )
+        state_dict["_sigma"] = self.sigmoid_sigma(trainer.max_epochs, trainer.current_epoch)
         """
         Neural Gas Parameters
         """
-        state_dict["_ng_lambda"] = self.lin_pieces(
-            trainer.max_epochs, trainer.current_epoch
-        )
+        state_dict["_ng_lambda"] = self.lin_pieces(trainer.max_epochs, trainer.current_epoch)
         """
         Loss weighting
         """
-        state_dict["_alpha"] = self.sigmoid_alpha(
-            trainer.max_epochs, trainer.current_epoch
-        )
+        state_dict["_alpha"] = self.sigmoid_alpha(trainer.max_epochs, trainer.current_epoch)
 
         pl_module.load_state_dict(state_dict)

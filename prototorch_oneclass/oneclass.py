@@ -1,4 +1,4 @@
-""" One Class Classifier based on GLVQ framework """
+"""One Class Classifier based on GLVQ framework"""
 
 from functools import partial
 

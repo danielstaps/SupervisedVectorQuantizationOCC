@@ -17,7 +17,7 @@ def make_S(
         center = radius
 
     # first 'circle' centered at center with radius r
-    t1 = np.random.uniform(0., 3 * np.pi / 2, int(n_samples / 2))
+    t1 = np.random.uniform(0.0, 3 * np.pi / 2, int(n_samples / 2))
     x1 = radius * np.cos(t1)
     y1 = radius * np.sin(t1) + center
 
@@ -50,13 +50,15 @@ def make_S(
 
 
 class S_Shape(torch.utils.data.TensorDataset):
-    def __init__(self,
-                 n_samples: int = 800,
-                 center: float = 0.5,
-                 radius: float = 0.5,
-                 noise: float = 0.3,
-                 ratio: float = 0.5,
-                 **kwargs):
+    def __init__(
+        self,
+        n_samples: int = 800,
+        center: float = 0.5,
+        radius: float = 0.5,
+        noise: float = 0.3,
+        ratio: float = 0.5,
+        **kwargs,
+    ):
         x, y = make_S(n_samples, radius, noise, ratio)
         self.data = torch.squeeze(torch.Tensor(x))
         self.target = torch.squeeze(torch.LongTensor(y))
