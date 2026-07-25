@@ -1,0 +1,7 @@
+.git
+__pycache__/
+*.pyc
+.venv/
+lightning_logs/
+*.ckpt
+*.pt

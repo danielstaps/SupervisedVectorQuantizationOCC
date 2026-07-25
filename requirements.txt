@@ -1,0 +1,9 @@
+numpy
+pandas
+matplotlib
+torch
+prototorch
+prototorch_models
+# optional, only for the tensorflow-datasets loaders:
+# tensorflow
+# tensorflow-datasets

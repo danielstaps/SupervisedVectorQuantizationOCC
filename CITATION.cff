@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "prototorch_oneclass (SVQ-OCC): supervised vector quantization one-class classifier"
+abstract: >-
+  Prototype-based one-class classifier for outlier/novelty detection using local representations,
+  built on prototorch and optimized by stochastic gradient descent.
+type: software
+authors:
+  - family-names: Staps
+    given-names: Daniel
+    orcid: "https://orcid.org/0009-0002-4459-4544"
+  - family-names: Villmann
+    given-names: Thomas
+    orcid: "https://orcid.org/0000-0001-6725-0141"
+repository-code: "https://github.com/danielstaps/SupervisedVectorQuantizationOCC"
+license: MIT
+year: 2022
+keywords:
+  - one-class classification
+  - outlier detection
+  - learning vector quantization
+  - prototype-based models
+  - interpretability
+preferred-citation:
+  type: conference-paper
+  title: "Prototype-based one-class-classification learning using local representations"
+  authors:
+    - family-names: Staps
+      given-names: Daniel
+      orcid: "https://orcid.org/0009-0002-4459-4544"
+    - family-names: Schubert
+      given-names: Ronny
+    - family-names: Kaden
+      given-names: Marika
+    - family-names: Lampe
+      given-names: Alexander
+    - family-names: Hermann
+      given-names: Wieland
+    - family-names: Villmann
+      given-names: Thomas
+      orcid: "https://orcid.org/0000-0001-6725-0141"
+  collection-title: "2022 International Joint Conference on Neural Networks (IJCNN)"
+  publisher:
+    name: IEEE
+  year: 2022
+  start: 1
+  end: 8
+  doi: "10.1109/IJCNN55064.2022.9892912"
