@@ -1,7 +1,7 @@
 # prototorch_oneclass — Supervised Vector Quantization One-Class Classifier (SVQ-OCC)
 
 [![Paper](https://img.shields.io/badge/paper-IJCNN%202022-blue)](https://doi.org/10.1109/IJCNN55064.2022.9892912)
-<!-- After a Zenodo release, add the software DOI badge here: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXX) -->
+[![DOI](https://zenodo.org/badge/702120245.svg)](https://doi.org/10.5281/zenodo.21573234)
 
 Reference / maintained implementation of the SVQ-OCC model from:
 

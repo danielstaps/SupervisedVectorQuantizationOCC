@@ -5,6 +5,7 @@ abstract: >-
   Prototype-based one-class classifier for outlier/novelty detection using local representations,
   built on prototorch and optimized by stochastic gradient descent.
 type: software
+doi: "10.5281/zenodo.21573234"
 authors:
   - family-names: Staps
     given-names: Daniel
