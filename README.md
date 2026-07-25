@@ -1,5 +1,8 @@
 # prototorch_oneclass — Supervised Vector Quantization One-Class Classifier (SVQ-OCC)
 
+[![Paper](https://img.shields.io/badge/paper-IJCNN%202022-blue)](https://doi.org/10.1109/IJCNN55064.2022.9892912)
+<!-- After a Zenodo release, add the software DOI badge here: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXX) -->
+
 Reference / maintained implementation of the SVQ-OCC model from:
 
 > D. Staps, R. Schubert, M. Kaden, A. Lampe, W. Hermann, T. Villmann,
@@ -47,6 +50,19 @@ by the K-MEB work (companion experiments repo, kept private).
 ## How to cite
 
 See [`CITATION.cff`](CITATION.cff) and cite the paper above.
+
+
+BibTeX:
+
+```bibtex
+@inproceedings{staps2022svqocc,
+  title        = {Prototype-based one-class-classification learning using local representations},
+  author       = {Staps, Daniel and Schubert, Ronny and Kaden, Marika and Lampe, Alexander and Hermann, Wieland and Villmann, Thomas},
+  booktitle    = {2022 International Joint Conference on Neural Networks (IJCNN)},
+  pages        = {1--8}, year = {2022}, organization = {IEEE},
+  doi          = {10.1109/IJCNN55064.2022.9892912}
+}
+```
 
 ## Acknowledgment
 
