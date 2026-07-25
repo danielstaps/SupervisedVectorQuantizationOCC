@@ -42,7 +42,7 @@ python3 examples/...    # see examples/ for runnable scripts
 
 This repository is the **canonical, self-contained home** of `prototorch_oneclass`; it no longer
 depends on private si-cim research repositories. It is also the package used as the SVQ-OCC baseline
-by the K-MEB work ([`KMEB_experiments`](https://github.com/danielstaps/KMEB_experiments)).
+by the K-MEB work (companion experiments repo, kept private).
 
 ## How to cite
 
