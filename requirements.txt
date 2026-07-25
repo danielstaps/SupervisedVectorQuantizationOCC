@@ -1,9 +1,9 @@
 numpy
 pandas
 matplotlib
-torch
-prototorch
-prototorch_models
+torch>=2.0
+prototorch==0.7.6
+prototorch_models==0.7.1
 # optional, only for the tensorflow-datasets loaders:
 # tensorflow
 # tensorflow-datasets
